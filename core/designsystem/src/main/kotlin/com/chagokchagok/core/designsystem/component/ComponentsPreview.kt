@@ -20,10 +20,10 @@ import com.chagokchagok.core.designsystem.theme.ChagokTheme
 
 /**
  * 공통 부품 확인용 미리보기.
- * 기획 저장소 `04. 화면 설계 및 UI/images/00_B-Foundations.png`의 "부품" 칸과 나란히 놓고 비교한다.
+ * 기획 저장소 `04. 화면 설계 및 UI/images/00_Foundations.png`의 "부품" 칸과 나란히 놓고 비교한다.
  * 앱 화면에서는 쓰지 않는다.
  */
-@Preview(name = "B안 부품", widthDp = 560, heightDp = 800)
+@Preview(name = "부품", widthDp = 560, heightDp = 800)
 @Composable
 private fun ComponentsPreview() {
     ChagokTheme {
@@ -122,7 +122,7 @@ private fun PassSample() {
 }
 
 /** 팝업 확인용 미리보기. 화면 05(관계 고르기)의 틀과 비교한다. */
-@Preview(name = "B안 팝업", widthDp = 1280, heightDp = 690)
+@Preview(name = "팝업", widthDp = 1280, heightDp = 690)
 @Composable
 private fun DialogPreview() {
     ChagokTheme {

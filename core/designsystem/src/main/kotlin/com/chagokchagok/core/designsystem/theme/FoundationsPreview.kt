@@ -25,10 +25,10 @@ import androidx.compose.ui.unit.dp
 
 /**
  * 테마 값 확인용 미리보기.
- * 기획 저장소 `04. 화면 설계 및 UI/images/00_B-Foundations.png`와 나란히 놓고 비교한다.
+ * 기획 저장소 `04. 화면 설계 및 UI/images/00_Foundations.png`와 나란히 놓고 비교한다.
  * 앱 화면에서는 쓰지 않는다.
  */
-@Preview(name = "B안 디자인 기준", widthDp = 1280, heightDp = 800)
+@Preview(name = "디자인 기준", widthDp = 1280, heightDp = 800)
 @Composable
 private fun FoundationsPreview() {
     ChagokTheme {

@@ -8,7 +8,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
 
 /**
- * B안 모서리.
+ * 모서리.
  * 값의 기준: 기획 저장소 `04. 화면 설계 및 UI/00. 화면 설계 개요.md` 2-3.
  * 안쪽 모서리 = 바깥 모서리 − 여백.
  */

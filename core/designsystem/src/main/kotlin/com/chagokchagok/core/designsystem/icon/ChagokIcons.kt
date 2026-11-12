@@ -9,7 +9,7 @@ import androidx.compose.ui.graphics.vector.addPathNodes
 import androidx.compose.ui.unit.dp
 
 /**
- * B안 선 아이콘 (24×24 격자, 선 굵기 2 안팎).
+ * 선 아이콘 (24×24 격자, 선 굵기 2 안팎).
  * 모양의 기준: 기획 저장소 `웹 데모/js/ui/icons.js`. 1차 화면에 쓰는 것만 옮겼다.
  * 색은 쓰는 쪽에서 `Icon(tint = ...)`으로 정한다.
  */

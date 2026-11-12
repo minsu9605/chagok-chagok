@@ -9,7 +9,7 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
 
 /**
- * 앱 공통 테마 (B안 · 민트 레몬).
+ * 앱 공통 테마 (민트 레몬).
  * 화면에서는 `ChagokTheme.colors.mint`, `ChagokTheme.typography.body`처럼 꺼내 쓴다.
  * Material 컴포넌트도 같은 색·글자를 쓰도록 Material 테마에도 같은 값을 넣는다.
  */
