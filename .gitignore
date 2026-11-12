@@ -1,0 +1,15 @@
+# Gradle / build
+build/
+.gradle/
+.kotlin/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# IDE
+.idea/
+*.iml
+.DS_Store
+
+# 로컬 설정 (SDK 경로, API 키)
+local.properties

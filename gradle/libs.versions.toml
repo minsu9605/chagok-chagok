@@ -1,0 +1,73 @@
+[versions]
+# 빌드 기준: Pleos Vehicle SDK 샘플 앱 (Gradle 8.10.2, AGP 8.8.2, Kotlin 2.0.0, JDK 17)
+agp = "8.8.2"
+kotlin = "2.0.0"
+ksp = "2.0.0-1.0.24"
+
+activityCompose = "1.9.3"
+composeBom = "2025.02.00"
+coreKtx = "1.15.0"
+coroutines = "1.8.1"
+hilt = "2.52"
+hiltNavigationCompose = "1.2.0"
+junit = "4.13.2"
+lifecycle = "2.8.7"
+navigation = "2.8.9"
+room = "2.6.1"
+serialization = "1.6.3"
+
+# Pleos Connect SDK
+pleosNaviHelper = "3.0.5"
+pleosSpeechToText = "3.3.1"
+pleosTextToSpeech = "3.3.1"
+pleosVehicle = "2.3.2"
+
+[libraries]
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
+androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
+androidx-compose-material3 = { module = "androidx.compose.material3:material3" }
+androidx-compose-ui = { module = "androidx.compose.ui:ui" }
+androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
+androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
+androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
+androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
+androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycle" }
+androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
+androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigation" }
+androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
+androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
+androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
+hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
+hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
+junit = { module = "junit:junit", version.ref = "junit" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
+
+pleos-navihelper = { module = "ai.pleos.playground:NaviHelper", version.ref = "pleosNaviHelper" }
+pleos-speechtotext = { module = "ai.pleos.playground:SpeechToText", version.ref = "pleosSpeechToText" }
+pleos-texttospeech = { module = "ai.pleos.playground:TextToSpeech", version.ref = "pleosTextToSpeech" }
+pleos-vehicle = { module = "ai.pleos.playground:Vehicle", version.ref = "pleosVehicle" }
+
+# build-logic 전용
+android-gradlePlugin = { module = "com.android.tools.build:gradle", version.ref = "agp" }
+kotlin-gradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+android-library = { id = "com.android.library", version.ref = "agp" }
+hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+
+# 프로젝트 convention plugin (build-logic)
+chagok-android-application = { id = "chagok.android.application" }
+chagok-android-compose = { id = "chagok.android.compose" }
+chagok-android-feature = { id = "chagok.android.feature" }
+chagok-android-hilt = { id = "chagok.android.hilt" }
+chagok-android-library = { id = "chagok.android.library" }
+chagok-android-room = { id = "chagok.android.room" }
+chagok-jvm-library = { id = "chagok.jvm.library" }
