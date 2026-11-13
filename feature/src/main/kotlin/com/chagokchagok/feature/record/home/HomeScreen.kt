@@ -4,7 +4,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -28,7 +27,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -71,7 +69,6 @@ fun HomeScreen(
             onBackToRecommendedClick = viewModel::onBackToRecommendedClick,
             onRelationPickerClose = viewModel::onRelationPickerClose,
             onStartToastClick = viewModel::onStartToastClick,
-            onSeatChipLongClick = viewModel::onSeatChipLongClick,
         ),
         modifier = modifier,
     )
@@ -87,7 +84,6 @@ private data class HomeActions(
     val onBackToRecommendedClick: () -> Unit = {},
     val onRelationPickerClose: () -> Unit = {},
     val onStartToastClick: () -> Unit = {},
-    val onSeatChipLongClick: () -> Unit = {},
 )
 
 @Composable
@@ -132,7 +128,6 @@ private fun HomeContent(
             HomeHeader(
                 uiState = uiState,
                 compact = compact,
-                onSeatChipLongClick = actions.onSeatChipLongClick,
             )
             Row(
                 modifier = Modifier.weight(1f),
@@ -304,7 +299,6 @@ private fun FeatureWidgets(
 private fun HomeHeader(
     uiState: HomeUiState,
     compact: Boolean,
-    onSeatChipLongClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -320,20 +314,16 @@ private fun HomeHeader(
         )
         val recording = uiState.recording
         if (recording == null) {
-            SeatStatusChip(seatCount = uiState.seatCount, onLongClick = onSeatChipLongClick)
+            SeatStatusChip(seatCount = uiState.seatCount)
         } else {
             RecordingStatusChip(relation = recording.relation)
         }
     }
 }
 
-/**
- * 기록 꺼짐: "탑승 2명 감지"
- *
- * @param onLongClick [임시 가짜 구현] 길게 누르면 탑승 인원을 바꾼다. core:pleos 좌석 감지 연결 후 삭제.
- */
+/** 기록 꺼짐: "탑승 2명 감지" */
 @Composable
-private fun SeatStatusChip(seatCount: Int, onLongClick: () -> Unit) {
+private fun SeatStatusChip(seatCount: Int) {
     val shape = ChagokTheme.shapes.pill
 
     Row(
@@ -342,7 +332,6 @@ private fun SeatStatusChip(seatCount: Int, onLongClick: () -> Unit) {
             .height(48.dp)
             .clip(shape)
             .background(ChagokTheme.colors.card)
-            .pointerInput(onLongClick) { detectTapGestures(onLongPress = { onLongClick() }) }
             .padding(start = 14.dp, end = 18.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,

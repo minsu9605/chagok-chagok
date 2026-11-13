@@ -10,7 +10,6 @@ import com.chagokchagok.core.domain.vehicle.SeatMonitor
 import com.chagokchagok.feature.common.RelationUi
 import com.chagokchagok.feature.common.toDomain
 import com.chagokchagok.feature.common.toUi
-import com.chagokchagok.feature.fake.FakeSeatMonitor
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -32,8 +31,6 @@ class HomeViewModel @Inject constructor(
     private val recordEngine: RecordEngine,
     diaryRepository: DiaryRepository,
     seatMonitor: SeatMonitor,
-    // [임시 구현] 탑승 인원을 손으로 바꾸는 시험 기능에만 쓴다. core:pleos 좌석 감지 연결 후 삭제.
-    private val fakeSeatMonitor: FakeSeatMonitor,
 ) : ViewModel() {
 
     /** 저장소에 없는, 이 화면만의 상태 (팝업과 토스트). */
@@ -106,11 +103,6 @@ class HomeViewModel @Inject constructor(
     fun onStartToastClick() {
         startToastJob?.cancel()
         localState.update { it.copy(startToast = null) }
-    }
-
-    /** [임시 구현] 탑승 인원 칩을 길게 누르면 인원을 바꾼다. core:pleos 좌석 감지 연결 후 삭제. */
-    fun onSeatChipLongClick() {
-        fakeSeatMonitor.cycle()
     }
 
     private fun showRelationPicker(mode: RelationPickerMode, seatCount: Int) {
