@@ -54,7 +54,7 @@ import kotlinx.coroutines.delay
 fun HomeScreen(
     modifier: Modifier = Modifier,
     onGoToNaviClick: () -> Unit = {},
-    onEndRecordClick: () -> Unit = {},
+    onRecordEnded: (sessionId: String) -> Unit = {},
     onRecordStarted: (autoStarted: Boolean) -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
@@ -65,13 +65,17 @@ fun HomeScreen(
     LaunchedEffect(viewModel) {
         viewModel.recordStarted.collect { autoStarted -> currentOnRecordStarted(autoStarted) }
     }
+    val currentOnRecordEnded by rememberUpdatedState(onRecordEnded)
+    LaunchedEffect(viewModel) {
+        viewModel.recordEnded.collect { sessionId -> currentOnRecordEnded(sessionId) }
+    }
 
     HomeContent(
         uiState = uiState,
         actions = HomeActions(
             onStartRecordClick = viewModel::onStartRecordClick,
             onGoToNaviClick = onGoToNaviClick,
-            onEndRecordClick = onEndRecordClick,
+            onEndRecordClick = viewModel::onEndRecordClick,
             onRelationClick = viewModel::onRelationClick,
             onShowAllRelationsClick = viewModel::onShowAllRelationsClick,
             onBackToRecommendedClick = viewModel::onBackToRecommendedClick,

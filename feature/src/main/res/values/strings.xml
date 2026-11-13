@@ -108,4 +108,23 @@
     <string name="feature_memory_saved_memo_quote">“%1$s”</string>
     <string name="feature_memory_saved_note">평가와 한마디는 이 차에 먼저 저장했어요. 해시태그는 연결되면 자동으로 채워져요.</string>
     <string name="feature_memory_saved_closing">2초 뒤 닫혀요</string>
+
+    <!-- 일기 완성 (화면 29) -->
+    <string name="feature_complete_title">오늘 %1$s 함께한 차곡차곡 일기가 완성되었어요!</string>
+    <string name="feature_complete_title_solo">오늘 나 혼자 다녀온 차곡차곡 일기가 완성되었어요!</string>
+    <string name="feature_complete_title_missing">일기를 찾지 못했어요</string>
+    <string name="feature_complete_visit_count">총 %1$d곳 방문</string>
+    <string name="feature_complete_close">확인 및 닫기</string>
+    <string name="feature_complete_origin">출발지</string>
+    <string name="feature_complete_route">하루 동선 · 출발지%1$s</string>
+    <string name="feature_complete_empty">오늘은 남긴 곳이 없어요</string>
+    <string name="feature_complete_no_memo">아직 남긴 한마디가 없어요</string>
+    <string name="feature_complete_add_memo">지금 한마디 추가하기</string>
+    <string name="feature_complete_arrived_at">%1$s 도착</string>
+    <string name="feature_complete_time">%1$s · %2$s</string>
+    <string name="feature_complete_stay_minutes">%1$d분</string>
+    <string name="feature_complete_stay_hours_minutes">%1$d시간 %2$d분</string>
+    <plurals name="feature_complete_stay_hours">
+        <item quantity="other">%1$d시간</item>
+    </plurals>
 </resources>

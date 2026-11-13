@@ -8,7 +8,8 @@ import com.chagokchagok.feature.common.toUi
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -19,8 +20,9 @@ class DriveViewModel @Inject constructor(
     private val naviController: NaviController,
 ) : ViewModel() {
 
-    val uiState: StateFlow<DriveUiState> = recordEngine.progress
-        .map { progress ->
+    private val endedSessionId = MutableStateFlow<String?>(null)
+
+    val uiState: StateFlow<DriveUiState> = combine(recordEngine.progress, endedSessionId) { progress, endedId ->
             val visitCount = progress?.savedVisits.orEmpty().size
             DriveUiState(
                 loaded = true,
@@ -28,6 +30,7 @@ class DriveViewModel @Inject constructor(
                 placeNames = progress?.savedVisits.orEmpty().map { it.place.name },
                 pendingPlaceName = progress?.pendingVisit?.place?.name,
                 nextDevPlaceName = DEV_PLACE_NAMES[visitCount % DEV_PLACE_NAMES.size],
+                endedSessionId = endedId,
             )
         }
         .stateIn(
@@ -39,6 +42,11 @@ class DriveViewModel @Inject constructor(
     /** 주행 화면에 들어올 때 순정 내비를 앞으로 불러 달라고 요청한다. */
     fun onEnter() {
         naviController.showNavigationScreen()
+    }
+
+    /** [기록 종료]. 기록을 끝내고, 끝난 기록의 id를 화면에 알린다. */
+    fun onEndRecordClick() {
+        viewModelScope.launch { endedSessionId.value = recordEngine.end() }
     }
 
     /**

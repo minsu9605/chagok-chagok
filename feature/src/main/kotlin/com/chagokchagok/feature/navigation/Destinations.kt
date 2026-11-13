@@ -17,3 +17,11 @@ data class DriveDestination(
     val justStarted: Boolean = false,
     val autoStarted: Boolean = false,
 )
+
+/**
+ * 일기 완성 화면 (화면 29).
+ *
+ * @property sessionId 방금 끝낸 기록의 id
+ */
+@Serializable
+data class DiaryCompleteDestination(val sessionId: String)

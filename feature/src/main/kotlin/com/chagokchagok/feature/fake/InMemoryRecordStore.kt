@@ -134,5 +134,17 @@ class InMemoryRecordStore @Inject constructor() : RecordEngine, DiaryRepository 
     override suspend fun getDiary(sessionId: String): Diary? =
         diaries.value.firstOrNull { it.session.id == sessionId }
 
+    override suspend fun saveDiaryMemo(visitId: String, text: String) {
+        diaries.update { all ->
+            all.map { diary ->
+                diary.copy(
+                    visits = diary.visits.map { saved ->
+                        if (saved.visit.id == visitId) saved.copy(visit = saved.visit.copy(memoText = text)) else saved
+                    },
+                )
+            }
+        }
+    }
+
     private fun newId(): String = UUID.randomUUID().toString()
 }

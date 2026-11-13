@@ -14,4 +14,7 @@ interface DiaryRepository {
 
     /** 일기 1권. 없으면 null */
     suspend fun getDiary(sessionId: String): Diary?
+
+    /** 끝난 일기의 방문에 한마디를 남기거나 고친다. 없는 방문이면 아무것도 하지 않는다. */
+    suspend fun saveDiaryMemo(visitId: String, text: String)
 }

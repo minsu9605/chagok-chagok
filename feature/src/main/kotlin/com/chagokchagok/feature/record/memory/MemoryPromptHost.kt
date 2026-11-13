@@ -205,7 +205,7 @@ private fun RateButton(
  * 시안은 음성으로 받는다. 음성 연결 전이라 같은 자리에 글자 입력칸과 [저장]을 임시로 둔다.
  */
 @Composable
-private fun MemoDialog(
+internal fun MemoDialog(
     memo: MemoryPromptUi.Memo,
     onTextChange: (String) -> Unit,
     onSaveClick: () -> Unit,

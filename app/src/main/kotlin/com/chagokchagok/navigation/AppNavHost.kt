@@ -9,8 +9,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import com.chagokchagok.feature.navigation.DiaryCompleteDestination
 import com.chagokchagok.feature.navigation.DriveDestination
 import com.chagokchagok.feature.navigation.HomeDestination
+import com.chagokchagok.feature.record.complete.DiaryCompleteScreen
 import com.chagokchagok.feature.record.drive.DriveScreen
 import com.chagokchagok.feature.record.home.HomeScreen
 import com.chagokchagok.feature.record.memory.MemoryPromptHost
@@ -21,6 +23,14 @@ fun AppNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
 ) {
+    // 기록을 끝내면 일기 완성 화면으로 간다. 닫으면 홈으로 돌아오도록 홈만 남긴다.
+    val showDiaryComplete: (String) -> Unit = { sessionId ->
+        navController.navigate(DiaryCompleteDestination(sessionId)) {
+            popUpTo<HomeDestination>()
+            launchSingleTop = true
+        }
+    }
+
     Box(modifier = modifier.fillMaxSize()) {
         NavHost(
             navController = navController,
@@ -29,6 +39,7 @@ fun AppNavHost(
         ) {
             composable<HomeDestination> {
                 HomeScreen(
+                    onRecordEnded = { sessionId -> showDiaryComplete(sessionId) },
                     onGoToNaviClick = { navController.navigate(DriveDestination()) { launchSingleTop = true } },
                     onRecordStarted = { autoStarted ->
                         navController.navigate(DriveDestination(justStarted = true, autoStarted = autoStarted)) {
@@ -44,9 +55,13 @@ fun AppNavHost(
                     justStarted = destination.justStarted,
                     autoStarted = destination.autoStarted,
                     onHomeClick = { backToHome() },
-                    // 기록 종료와 일기 완성 화면은 다음 단계에서 연결한다.
-                    onEndRecordClick = {},
+                    onRecordEnded = { sessionId -> showDiaryComplete(sessionId) },
                     onNotRecording = { backToHome() },
+                )
+            }
+            composable<DiaryCompleteDestination> {
+                DiaryCompleteScreen(
+                    onCloseClick = { navController.popBackStack(route = HomeDestination, inclusive = false) },
                 )
             }
         }

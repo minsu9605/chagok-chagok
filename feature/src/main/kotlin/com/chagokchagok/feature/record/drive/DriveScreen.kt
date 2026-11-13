@@ -63,14 +63,15 @@ import kotlinx.coroutines.delay
  *
  * @param justStarted 방금 기록을 시작해서 왔으면 true. 시작 안내 토스트를 띄운다 (화면 08, 09)
  * @param autoStarted 좌석 1명이라 묻지 않고 시작했으면 true
- * @param onNotRecording 기록 중이 아닌데 이 화면에 있을 때 (기록이 끝났을 때)
+ * @param onRecordEnded [기록 종료]로 기록을 끝냈을 때. 끝난 기록의 id를 넘긴다
+ * @param onNotRecording 기록 중이 아닌데 이 화면에 있을 때
  */
 @Composable
 fun DriveScreen(
     justStarted: Boolean,
     autoStarted: Boolean,
     onHomeClick: () -> Unit,
-    onEndRecordClick: () -> Unit,
+    onRecordEnded: (sessionId: String) -> Unit,
     onNotRecording: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: DriveViewModel = hiltViewModel(),
@@ -78,8 +79,12 @@ fun DriveScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) { viewModel.onEnter() }
-    LaunchedEffect(uiState.loaded, uiState.relation) {
-        if (uiState.loaded && uiState.relation == null) onNotRecording()
+    LaunchedEffect(uiState.loaded, uiState.relation, uiState.endedSessionId) {
+        val endedSessionId = uiState.endedSessionId
+        when {
+            endedSessionId != null -> onRecordEnded(endedSessionId)
+            uiState.loaded && uiState.relation == null -> onNotRecording()
+        }
     }
 
     DriveContent(
@@ -87,7 +92,7 @@ fun DriveScreen(
         justStarted = justStarted,
         autoStarted = autoStarted,
         onHomeClick = onHomeClick,
-        onEndRecordClick = onEndRecordClick,
+        onEndRecordClick = viewModel::onEndRecordClick,
         onDevArriveClick = viewModel::onDevArriveClick,
         onDevRestartClick = viewModel::onDevRestartClick,
         modifier = modifier,

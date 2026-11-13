@@ -324,7 +324,7 @@ private fun AskExamplePill(text: String, compact: Boolean) {
  * 색의 기준: 화면 설계 개요 2-1의 지도 색. 지도 기능은 2차라 테마에 넣지 않고 여기서만 쓴다.
  */
 @Composable
-private fun MapBackdrop(showPins: Boolean, modifier: Modifier = Modifier) {
+internal fun MapBackdrop(showPins: Boolean, modifier: Modifier = Modifier) {
     val relationColors = ChagokTheme.colors.relation
     // 예시 핀: (가로 위치, 세로 위치, 색). 위치는 그림 크기에 대한 비율이다.
     val pins = listOf(

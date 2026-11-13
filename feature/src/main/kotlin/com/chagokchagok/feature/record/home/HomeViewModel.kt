@@ -46,6 +46,11 @@ class HomeViewModel @Inject constructor(
     /** 기록을 시작했을 때 한 번 낸다. 값은 좌석 1명이라 묻지 않고 시작했는지 여부. */
     val recordStarted: Flow<Boolean> = _recordStarted.receiveAsFlow()
 
+    private val _recordEnded = Channel<String>(Channel.BUFFERED)
+
+    /** [기록 종료]로 기록을 끝냈을 때 한 번 낸다. 값은 끝난 기록의 id. */
+    val recordEnded: Flow<String> = _recordEnded.receiveAsFlow()
+
     val uiState: StateFlow<HomeUiState> = combine(
         seatMonitor.occupantCount,
         recordEngine.progress,
@@ -95,6 +100,14 @@ class HomeViewModel @Inject constructor(
     fun onBackToRecommendedClick() {
         val picker = localState.value.relationPicker ?: return
         showRelationPicker(mode = recommendedMode(picker.seatCount), seatCount = picker.seatCount)
+    }
+
+    /** [기록 종료]. 기록을 끝내고, 끝난 기록의 id를 한 번 낸다. */
+    fun onEndRecordClick() {
+        viewModelScope.launch {
+            val sessionId = recordEngine.end() ?: return@launch
+            _recordEnded.send(sessionId)
+        }
     }
 
     /** 관계 팝업의 [✕] */
