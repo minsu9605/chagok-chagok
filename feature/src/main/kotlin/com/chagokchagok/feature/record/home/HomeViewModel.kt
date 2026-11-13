@@ -2,12 +2,15 @@ package com.chagokchagok.feature.record.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.chagokchagok.core.domain.diary.DiaryRepository
+import com.chagokchagok.core.domain.model.Diary
+import com.chagokchagok.core.domain.model.RecordProgress
+import com.chagokchagok.core.domain.record.RecordEngine
+import com.chagokchagok.core.domain.vehicle.SeatMonitor
 import com.chagokchagok.feature.common.RelationUi
-import com.chagokchagok.feature.fake.FakeLastRecord
-import com.chagokchagok.feature.fake.FakeRecordStore
-import com.chagokchagok.feature.fake.FakeSession
-import com.chagokchagok.feature.fake.toFakeRelation
-import com.chagokchagok.feature.fake.toRelationUi
+import com.chagokchagok.feature.common.toDomain
+import com.chagokchagok.feature.common.toUi
+import com.chagokchagok.feature.fake.FakeSeatMonitor
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -19,14 +22,18 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    // [임시 가짜 구현] core:domain 연결 후 core:domain 인터페이스로 바꾼다.
-    private val fakeRecordStore: FakeRecordStore,
+    private val recordEngine: RecordEngine,
+    diaryRepository: DiaryRepository,
+    seatMonitor: SeatMonitor,
+    // [임시 구현] 탑승 인원을 손으로 바꾸는 시험 기능에만 쓴다. core:pleos 좌석 감지 연결 후 삭제.
+    private val fakeSeatMonitor: FakeSeatMonitor,
 ) : ViewModel() {
 
     /** 저장소에 없는, 이 화면만의 상태 (팝업과 토스트). */
@@ -39,21 +46,21 @@ class HomeViewModel @Inject constructor(
     private var startToastJob: Job? = null
 
     val uiState: StateFlow<HomeUiState> = combine(
-        fakeRecordStore.seatCount,
-        fakeRecordStore.activeSession,
-        fakeRecordStore.lastRecord,
-        fakeRecordStore.diarySummary,
+        seatMonitor.occupantCount,
+        recordEngine.progress,
+        diaryRepository.observeLastDiary(),
+        diaryRepository.observeSummary(),
         localState,
-    ) { seatCount, activeSession, lastRecord, diarySummary, local ->
+    ) { seatCount, progress, lastDiary, diarySummary, local ->
         HomeUiState(
             dateText = LocalDate.now().format(TODAY_FORMATTER),
             seatCount = seatCount,
-            lastRecord = lastRecord?.toUi(),
+            lastRecord = lastDiary?.toLastRecordUi(),
             diarySummary = DiarySummaryUi(
                 diaryCount = diarySummary.diaryCount,
                 pinCount = diarySummary.pinCount,
             ),
-            recording = activeSession?.toUi(),
+            recording = progress?.toUi(),
             relationPicker = local.relationPicker,
             startToast = local.startToast,
         )
@@ -65,7 +72,7 @@ class HomeViewModel @Inject constructor(
 
     /** [쌓기 시작]: 좌석 1명이면 묻지 않고 '나 혼자'로 시작하고, 2명 이상이면 관계를 묻는다. */
     fun onStartRecordClick() {
-        val seatCount = fakeRecordStore.seatCount.value
+        val seatCount = uiState.value.seatCount
         if (seatCount <= 1) {
             startRecord(relation = RelationUi.SOLO, autoStarted = true)
         } else {
@@ -101,9 +108,9 @@ class HomeViewModel @Inject constructor(
         localState.update { it.copy(startToast = null) }
     }
 
-    /** [임시 가짜 구현] 탑승 인원 칩을 길게 누르면 인원을 바꾼다. core:pleos 좌석 감지 연결 후 삭제. */
+    /** [임시 구현] 탑승 인원 칩을 길게 누르면 인원을 바꾼다. core:pleos 좌석 감지 연결 후 삭제. */
     fun onSeatChipLongClick() {
-        fakeRecordStore.cycleSeatCount()
+        fakeSeatMonitor.cycle()
     }
 
     private fun showRelationPicker(mode: RelationPickerMode, seatCount: Int) {
@@ -111,7 +118,7 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun startRecord(relation: RelationUi, autoStarted: Boolean) {
-        fakeRecordStore.startSession(relation.toFakeRelation())
+        val seatCount = uiState.value.seatCount
         localState.update {
             it.copy(
                 relationPicker = null,
@@ -120,6 +127,7 @@ class HomeViewModel @Inject constructor(
         }
         startToastJob?.cancel()
         startToastJob = viewModelScope.launch {
+            recordEngine.start(relation = relation.toDomain(), occupantCount = seatCount)
             delay(START_TOAST_MILLIS)
             localState.update { it.copy(startToast = null) }
         }
@@ -128,17 +136,17 @@ class HomeViewModel @Inject constructor(
     private fun recommendedMode(seatCount: Int): RelationPickerMode =
         if (seatCount == 2) RelationPickerMode.TWO else RelationPickerMode.THREE_OR_MORE
 
-    private fun FakeLastRecord.toUi() = LastRecordUi(
-        dateText = date.format(MONTH_DAY_FORMATTER),
-        relation = relation.toRelationUi(),
-        placeCount = placeCount,
+    private fun Diary.toLastRecordUi() = LastRecordUi(
+        dateText = session.sessionDate.format(MONTH_DAY_FORMATTER),
+        relation = session.relation.toUi(),
+        placeCount = visits.size,
     )
 
-    private fun FakeSession.toUi() = RecordingUi(
-        relation = relation.toRelationUi(),
-        seatCount = seatCount,
-        startedAtText = startedAt.format(TIME_FORMATTER),
-        placeNames = placeNames,
+    private fun RecordProgress.toUi() = RecordingUi(
+        relation = session.relation.toUi(),
+        seatCount = session.initialOccupantCount,
+        startedAtText = session.startedAt.atZone(ZoneId.systemDefault()).format(TIME_FORMATTER),
+        placeNames = savedVisits.map { it.place.name },
     )
 
     private companion object {
