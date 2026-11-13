@@ -249,27 +249,6 @@ internal fun RecordActiveWidget(
                 icon = relation.icon,
                 height = 36.dp,
             )
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = stringResource(
-                    R.string.feature_home_recording_now,
-                    if (showSeatCount) {
-                        stringResource(
-                            R.string.feature_home_recording_mode_with_seats,
-                            modeLabel,
-                            recording.seatCount,
-                        )
-                    } else {
-                        modeLabel
-                    },
-                ),
-                style = if (compact) {
-                    ChagokTheme.typography.cardTitle
-                } else {
-                    ChagokTheme.typography.screenTitle.copy(fontSize = 28.sp, lineHeight = 37.sp)
-                },
-                color = ChagokTheme.colors.ink,
-            )
             Spacer(modifier = Modifier.height(if (compact) 14.dp else 20.dp))
             TodayPlaces(placeNames = recording.placeNames)
             Spacer(modifier = Modifier.weight(1f))

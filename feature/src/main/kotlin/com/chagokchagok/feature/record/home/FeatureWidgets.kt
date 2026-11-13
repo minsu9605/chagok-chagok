@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -30,7 +29,6 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -114,7 +112,7 @@ internal fun DiaryWidget(summary: DiarySummaryUi?, onClick: () -> Unit, modifier
 /**
  * 코스 짜기 위젯.
  *
- * @param compact 창이 좁을 때 true. 글자를 줄이고 예시 문장을 두 줄까지 허용한다.
+ * @param compact 창이 좁을 때 true. 글자를 줄인다.
  */
 @Composable
 internal fun CourseWidget(compact: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
@@ -149,21 +147,6 @@ internal fun CourseWidget(compact: Boolean, onClick: () -> Unit, modifier: Modif
                 ),
                 color = ChagokTheme.colors.ink,
             )
-            Spacer(modifier = Modifier.weight(1f))
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                ExamplePill(
-                    text = stringResource(R.string.feature_home_course_chip_dessert),
-                    modifier = Modifier.fillMaxWidth(),
-                    icon = ChagokIcons.Coffee,
-                    compact = compact,
-                )
-                ExamplePill(
-                    text = stringResource(R.string.feature_home_course_chip_nearby),
-                    modifier = Modifier.fillMaxWidth(),
-                    icon = ChagokIcons.Pin,
-                    compact = compact,
-                )
-            }
         }
     }
 }
@@ -254,46 +237,6 @@ private fun WidgetTitle(text: String) {
         style = ChagokTheme.typography.cardTitle.copy(fontSize = 21.sp, lineHeight = 28.sp),
         color = ChagokTheme.colors.ink,
     )
-}
-
-/**
- * 코스 짜기의 예시 문장 알약. 예: "우리가 좋아했던 디저트 코스"
- *
- * @param compact 위젯이 좁을 때 true. 글자를 줄이고, 한 줄에 안 들어가면 두 줄로 넘긴다.
- */
-@Composable
-private fun ExamplePill(
-    text: String,
-    icon: ImageVector,
-    compact: Boolean,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier
-            .heightIn(min = 44.dp)
-            .background(ChagokTheme.colors.background, ChagokTheme.shapes.innerCard)
-            .padding(horizontal = if (compact) 12.dp else 14.dp, vertical = 6.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            modifier = Modifier.size(18.dp),
-            tint = ChagokTheme.colors.mintInk,
-        )
-        Text(
-            text = text,
-            style = ChagokTheme.typography.caption.copy(
-                fontSize = if (compact) 14.sp else 15.sp,
-                fontWeight = FontWeight.Bold,
-                lineHeight = if (compact) 19.sp else 22.sp,
-            ),
-            color = ChagokTheme.colors.ink,
-            maxLines = if (compact) 2 else 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-    }
 }
 
 /** 기억 물어보기의 예시 질문 알약. 예: "우리 여기 전에 왔었나?" */

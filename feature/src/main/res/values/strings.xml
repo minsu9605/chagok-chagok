@@ -21,13 +21,11 @@
     <string name="feature_home_record_title">차곡차곡 쌓기</string>
     <string name="feature_home_record_today_count">오늘 %1$d곳</string>
     <string name="feature_home_record_start">쌓기 시작</string>
-    <string name="feature_home_record_description">오늘의 드라이브 기록 시작\n누르면 탑승 인원을 확인하고 누구와 함께인지 여쭤볼게요</string>
+    <string name="feature_home_record_description">오늘의 드라이브 기록 시작</string>
     <string name="feature_home_record_last">지난 기록 · %1$s %2$s %3$d곳</string>
 
     <string name="feature_home_recording_started_at">%1$s 시작</string>
     <string name="feature_home_recording_mode_chip">%1$s · %2$d인</string>
-    <string name="feature_home_recording_mode_with_seats">%1$s(%2$d인)</string>
-    <string name="feature_home_recording_now">현재 ‘%1$s’로\n차곡차곡 기록 중</string>
     <string name="feature_home_recording_today_label">오늘 다녀온 곳</string>
     <string name="feature_home_recording_place_count">%1$d곳</string>
     <string name="feature_home_recording_no_place">아직 없어요</string>
@@ -40,8 +38,6 @@
     <string name="feature_home_diary_summary">일기 %1$d권 · 핀 %2$d곳</string>
     <string name="feature_home_course_title">코스 짜기</string>
     <string name="feature_home_course_description">어디로 갈지 말하면\n내 기억으로 코스를 짜요</string>
-    <string name="feature_home_course_chip_dessert">우리가 좋아했던 디저트 코스</string>
-    <string name="feature_home_course_chip_nearby">이 근처 좋은 기억 다시 가기</string>
     <string name="feature_home_ask_title">기억 물어보기</string>
     <string name="feature_home_ask_description">음성 검색 · 남긴 기억에서 찾아 드려요</string>
     <string name="feature_home_ask_example_cafe">“지난번에 갔던 치즈케이크 카페 어디였지?”</string>
