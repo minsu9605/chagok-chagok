@@ -47,14 +47,15 @@ sealed interface CourseStep {
      */
     data class CaseB(val utterance: String, val keywordLabel: String, val memory: CourseItemUi) : CourseStep
 
-    /** 새 후보 고르기 (화면 39) */
-    data class NewCandidates(val utterance: String, val candidates: List<CourseItemUi>) : CourseStep
+    /**
+     * 새 장소가 필요한 자리 (화면 39, 41). 새 장소는 지도 서비스에서 찾아야 해서 지금은 안내만 한다.
+     *
+     * @property keptMemory Case B에서 코스에 넣기로 한 기억. 없으면 null
+     */
+    data class NewPlacesPending(val utterance: String, val keptMemory: CourseItemUi?) : CourseStep
 
     /** 좋았던 기록 없음 (화면 40) */
     data class CaseC(val utterance: String) : CourseStep
-
-    /** 시작 테마 고르기 (화면 41) */
-    data class Themes(val utterance: String, val themes: List<CourseThemeUi>) : CourseStep
 
     /** 코스 완성 카드 (화면 42, 43) */
     data object Card : CourseStep
@@ -74,18 +75,6 @@ data class CourseItemUi(
     val dateText: String? = null,
     val category: String? = null,
     val distanceText: String? = null,
-)
-
-/**
- * 시작 테마.
- *
- * @property title 예: "물회집부터"
- * @property flow 예: "식사 → 바다 카페"
- */
-data class CourseThemeUi(
-    val title: String,
-    val flow: String,
-    val items: List<CourseItemUi>,
 )
 
 /**

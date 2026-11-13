@@ -35,7 +35,7 @@ import javax.inject.Inject
 
 /**
  * 코스 짜기의 흐름: 첫 마디 → 기록 상황(Case A·B·C)에 따라 묻고 답하기 → 코스 카드 → 출발.
- * 내 기억은 실제 기록에서 찾는다. 새 장소는 지도 서비스를 붙이기 전이라 예시 장소를 보여 준다.
+ * 코스는 내 기억(좋았던 곳)으로만 짠다. 새 장소는 지도 서비스를 붙여야 찾을 수 있어 지금은 안내만 한다.
  */
 @HiltViewModel
 class CourseViewModel @Inject constructor(
@@ -111,42 +111,29 @@ class CourseViewModel @Inject constructor(
      */
     fun onKeepPick(keepMemory: Boolean) {
         val step = state.value.step as? CourseStep.CaseB ?: return
-        keptMemory = step.memory.takeIf { keepMemory }
-        state.update {
-            it.copy(
-                step = CourseStep.NewCandidates(utterance = step.utterance, candidates = SAMPLE_NEW_PLACES),
-                questionCount = it.questionCount + 1,
-            )
-        }
-    }
-
-    /** 새 후보 가운데 하나를 골랐다. */
-    fun onCandidatePick(candidate: CourseItemUi) {
-        showCard(listOfNotNull(keptMemory, candidate))
+        showNewPlacesPending(utterance = step.utterance, keptMemory = step.memory.takeIf { keepMemory })
     }
 
     /** Case C의 [응, 새로 제안해 줘] */
     fun onSuggestNewClick() {
         val step = state.value.step as? CourseStep.CaseC ?: return
-        state.update {
-            it.copy(
-                step = CourseStep.Themes(utterance = step.utterance, themes = SAMPLE_THEMES),
-                questionCount = it.questionCount + 1,
-            )
-        }
+        showNewPlacesPending(utterance = step.utterance, keptMemory = null)
     }
 
-    fun onThemePick(theme: CourseThemeUi) {
-        showCard(theme.items)
+    /** 새 장소 안내에서 [‘○○’만 넣어 코스 만들기]. 코스에 넣기로 한 기억 하나로 코스를 만든다. */
+    fun onKeptMemoryOnlyClick() {
+        val step = state.value.step as? CourseStep.NewPlacesPending ?: return
+        val kept = step.keptMemory ?: return
+        showCard(listOf(kept))
     }
 
     // ── 코스 카드 (화면 42, 42-1, 43) ───────────────────────────────────
 
-    /** [변경]. 코스에 없는 내 기억과 새 장소를 후보로 보여 준다. */
+    /** [변경]. 코스에 없는 내 기억(좋았던 곳)을 후보로 보여 준다. */
     fun onSwapClick(index: Int) {
         val current = state.value.items.map { it.name }
         val memories = plan?.let { (it.matched + it.others).map { memory -> memory.toItem() } }.orEmpty()
-        val candidates = (memories + SAMPLE_NEW_PLACES).filter { it.name !in current }.take(MAX_SWAP_CANDIDATES)
+        val candidates = memories.filter { it.name !in current }.take(MAX_SWAP_CANDIDATES)
         state.update { it.copy(swap = CourseSwapUi(index = index, candidates = candidates)) }
     }
 
@@ -184,8 +171,6 @@ class CourseViewModel @Inject constructor(
 
     // ── 공통 ────────────────────────────────────────────────────────────
 
-    /** Case B에서 코스에 넣기로 한 기억. 넣지 않기로 했으면 null */
-    private var keptMemory: CourseItemUi? = null
 
     /** 첫 마디로 기록 상황을 가려 다음 단계를 정한다. */
     private fun begin(utterance: String) {
@@ -210,6 +195,15 @@ class CourseViewModel @Inject constructor(
                 CourseCase.C -> CourseStep.CaseC(utterance = text)
             }
             state.update { it.copy(step = step, listening = false, questionCount = 1) }
+        }
+    }
+
+    private fun showNewPlacesPending(utterance: String, keptMemory: CourseItemUi?) {
+        state.update {
+            it.copy(
+                step = CourseStep.NewPlacesPending(utterance = utterance, keptMemory = keptMemory),
+                questionCount = it.questionCount + 1,
+            )
         }
     }
 
@@ -252,19 +246,5 @@ class CourseViewModel @Inject constructor(
         const val MAX_SWAP_CANDIDATES = 3
         val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd", Locale.KOREAN)
 
-        /*
-         * [예시 데이터] 새 장소 추천은 지도 서비스(카카오 로컬)를 붙여야 실제로 찾을 수 있다.
-         * 그때까지는 화면 설계 문서의 예시 장소를 그대로 보여 준다. 실제 검색 결과가 아니다.
-         */
-        val SAMPLE_NEW_PLACES = listOf(
-            CourseItemUi(name = "팔공 브리즈", fromMemory = false, category = "카페", distanceText = "약 2km"),
-            CourseItemUi(name = "마운틴 뷰 카페", fromMemory = false, category = "카페", distanceText = "약 4km"),
-        )
-        private val SAMPLE_MEAL = CourseItemUi(name = "환호 물회", fromMemory = false, category = "식당")
-        private val SAMPLE_CAFE = CourseItemUi(name = "영일대 바다 카페", fromMemory = false, category = "카페")
-        val SAMPLE_THEMES = listOf(
-            CourseThemeUi(title = "물회집부터", flow = "식사 → 바다 카페", items = listOf(SAMPLE_MEAL, SAMPLE_CAFE)),
-            CourseThemeUi(title = "베이커리 카페부터", flow = "카페 → 식사", items = listOf(SAMPLE_CAFE, SAMPLE_MEAL)),
-        )
     }
 }

@@ -443,7 +443,7 @@ private fun CourseCardPreview() = ChagokTheme {
             step = CourseStep.Card,
             items = listOf(
                 CourseItemUi(name = "시골길 김치찌개", fromMemory = true, dateText = "2025.11.22"),
-                CourseItemUi(name = "팔공 브리즈", fromMemory = false, category = "카페", distanceText = "약 2km"),
+                CourseItemUi(name = "앞산 카페", fromMemory = true, dateText = "2026.10.12"),
             ),
         ),
         actions = CourseActions(),

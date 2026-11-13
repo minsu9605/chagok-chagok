@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -88,9 +87,8 @@ fun CourseScreen(
             onRestartClick = viewModel::onRestartClick,
             onFirstPick = viewModel::onFirstPick,
             onKeepPick = viewModel::onKeepPick,
-            onCandidatePick = viewModel::onCandidatePick,
+            onKeptMemoryOnlyClick = viewModel::onKeptMemoryOnlyClick,
             onSuggestNewClick = viewModel::onSuggestNewClick,
-            onThemePick = viewModel::onThemePick,
             onSwapClick = viewModel::onSwapClick,
             onSwapPick = viewModel::onSwapPick,
             onSwapClose = viewModel::onSwapClose,
@@ -109,9 +107,8 @@ internal data class CourseActions(
     val onRestartClick: () -> Unit = {},
     val onFirstPick: () -> Unit = {},
     val onKeepPick: (keepMemory: Boolean) -> Unit = {},
-    val onCandidatePick: (CourseItemUi) -> Unit = {},
+    val onKeptMemoryOnlyClick: () -> Unit = {},
     val onSuggestNewClick: () -> Unit = {},
-    val onThemePick: (CourseThemeUi) -> Unit = {},
     val onSwapClick: (index: Int) -> Unit = {},
     val onSwapPick: (CourseItemUi) -> Unit = {},
     val onSwapClose: () -> Unit = {},
@@ -420,28 +417,15 @@ private fun ColumnScope.ChatBody(
             message = stringResource(R.string.feature_course_b_message, step.keywordLabel, step.memory.name)
             hint = stringResource(R.string.feature_course_b_hint)
         }
-        is CourseStep.NewCandidates -> {
+        is CourseStep.NewPlacesPending -> {
             utterance = step.utterance
-            val (first, second) = step.candidates
-            message = stringResource(
-                R.string.feature_course_candidates_message,
-                first.name,
-                first.distanceText.orEmpty(),
-                second.name,
-                second.distanceText.orEmpty(),
-            )
-            hint = stringResource(R.string.feature_course_candidates_hint)
+            message = stringResource(R.string.feature_course_pending_message)
+            hint = stringResource(R.string.feature_course_pending_hint)
         }
         is CourseStep.CaseC -> {
             utterance = step.utterance
             message = stringResource(R.string.feature_course_c_message)
             hint = stringResource(R.string.feature_course_c_hint)
-        }
-        is CourseStep.Themes -> {
-            utterance = step.utterance
-            val (first, second) = step.themes
-            message = stringResource(R.string.feature_course_themes_message, first.title, second.title)
-            hint = stringResource(R.string.feature_course_themes_hint, first.title)
         }
         CourseStep.Start, CourseStep.Card -> return
     }
@@ -616,49 +600,23 @@ private fun ChatChoices(
                 )
             }
         }
-        is CourseStep.NewCandidates -> {
-            ChoiceRow {
-                step.candidates.forEachIndexed { index, candidate ->
-                    Row(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(24.dp))
-                            .background(ChagokTheme.colors.card)
-                            .clickable(role = Role.Button) { actions.onCandidatePick(candidate) }
-                            .padding(14.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        OrderCircle(number = index + 1, first = index == 0)
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = candidate.name,
-                                style = ChagokTheme.typography.cardTitle.copy(fontSize = 18.sp, lineHeight = 24.sp),
-                                color = ChagokTheme.colors.ink,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                            Text(
-                                text = stringResource(
-                                    R.string.feature_course_new_place_sub,
-                                    candidate.category.orEmpty(),
-                                    candidate.distanceText.orEmpty(),
-                                ),
-                                style = ChagokTheme.typography.label.copy(fontWeight = FontWeight.SemiBold),
-                                color = ChagokTheme.colors.inkSecondary,
-                            )
-                        }
-                        ChagokChip(
-                            text = stringResource(R.string.feature_course_new_place),
-                            colors = ChagokChipDefaults.fill(),
-                        )
-                    }
-                }
+        is CourseStep.NewPlacesPending -> ChoiceRow {
+            val kept = step.keptMemory
+            if (kept != null) {
+                ChagokButton(
+                    text = stringResource(R.string.feature_course_pending_keep, kept.name),
+                    onClick = actions.onKeptMemoryOnlyClick,
+                    height = CHOICE_HEIGHT,
+                    elevated = true,
+                )
             }
-            Text(
-                text = stringResource(R.string.feature_course_candidates_note),
-                style = ChagokTheme.typography.label.copy(fontWeight = FontWeight.SemiBold),
-                color = ChagokTheme.colors.inkSecondary,
+            ChagokButton(
+                text = stringResource(R.string.feature_course_c_change),
+                onClick = actions.onRestartClick,
+                style = if (kept != null) ChagokButtonStyle.White else ChagokButtonStyle.Primary,
+                height = CHOICE_HEIGHT,
+                icon = ChagokIcons.Refresh,
+                elevated = kept == null,
             )
         }
         is CourseStep.CaseC -> ChoiceRow {
@@ -676,18 +634,6 @@ private fun ChatChoices(
                 icon = ChagokIcons.Refresh,
             )
         }
-        is CourseStep.Themes -> ChoiceRow {
-            step.themes.forEachIndexed { index, theme ->
-                ChagokButton(
-                    text = stringResource(R.string.feature_course_theme_label, theme.title, theme.flow),
-                    onClick = { actions.onThemePick(theme) },
-                    style = if (index == 0) ChagokButtonStyle.Primary else ChagokButtonStyle.White,
-                    height = CHOICE_HEIGHT,
-                    icon = if (index == 0) ChagokIcons.Bowl else ChagokIcons.Coffee,
-                    elevated = index == 0,
-                )
-            }
-        }
         CourseStep.Start, CourseStep.Card -> Unit
     }
 }
@@ -699,26 +645,6 @@ private fun ChoiceRow(content: @Composable RowScope.() -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
         content = content,
     )
-}
-
-/** 순서 동그라미. 첫 번째는 민트로 채운다. */
-@Composable
-internal fun OrderCircle(number: Int, first: Boolean) {
-    Box(
-        modifier = Modifier
-            .size(34.dp)
-            .background(
-                if (first) ChagokTheme.colors.mint else ChagokTheme.colors.mintSoft,
-                ChagokTheme.shapes.pill,
-            ),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = number.toString(),
-            style = ChagokTheme.typography.label.copy(fontSize = 16.sp),
-            color = ChagokTheme.colors.onMint,
-        )
-    }
 }
 
 private val UserBubbleShape = RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp, bottomEnd = 6.dp, bottomStart = 22.dp)

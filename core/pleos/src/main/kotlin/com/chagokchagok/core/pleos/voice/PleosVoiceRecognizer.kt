@@ -6,6 +6,8 @@ import ai.pleos.playground.stt.constant.Mode
 import ai.pleos.playground.stt.listener.OnInitializeListener
 import ai.pleos.playground.stt.listener.ResultListener
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import com.chagokchagok.core.domain.voice.VoiceEvent
 import com.chagokchagok.core.domain.voice.VoiceRecognizer
@@ -86,15 +88,31 @@ class PleosVoiceRecognizer @Inject constructor(
             try {
                 speechToText.stop()
                 speechToText.removeListener(listener)
-                speechToText.release()
             } catch (e: Exception) {
-                Log.w(TAG, "stt release failed", e)
+                Log.w(TAG, "stt stop failed", e)
             }
+            // stop()은 서비스에 늦게 닿는다. 바로 release()하면 stop이 전달되지 않아 마이크가 켜진 채 남는다.
+            // SDK 문서도 비동기 처리가 끝나기 전에 release()를 부르지 말라고 한다. 그래서 조금 뒤에 해제한다.
+            mainHandler.postDelayed(
+                {
+                    try {
+                        speechToText.release()
+                    } catch (e: Exception) {
+                        Log.w(TAG, "stt release failed", e)
+                    }
+                },
+                RELEASE_DELAY_MILLIS,
+            )
         }
     }
 
+    private val mainHandler = Handler(Looper.getMainLooper())
+
     private companion object {
         const val TAG = "PleosVoiceRecognizer"
+
+        /** stop()이 서비스에 닿을 때까지 해제를 미루는 시간 */
+        const val RELEASE_DELAY_MILLIS = 1_000L
         const val FINAL_RESULT_WAIT_MILLIS = 1_500L
     }
 }
