@@ -23,13 +23,11 @@ class DriveViewModel @Inject constructor(
     private val endedSessionId = MutableStateFlow<String?>(null)
 
     val uiState: StateFlow<DriveUiState> = combine(recordEngine.progress, endedSessionId) { progress, endedId ->
-            val visitCount = progress?.savedVisits.orEmpty().size
             DriveUiState(
                 loaded = true,
                 relation = progress?.session?.relation?.toUi(),
                 placeNames = progress?.savedVisits.orEmpty().map { it.place.name },
                 pendingPlaceName = progress?.pendingVisit?.place?.name,
-                nextDevPlaceName = DEV_PLACE_NAMES[visitCount % DEV_PLACE_NAMES.size],
                 endedSessionId = endedId,
             )
         }
@@ -49,24 +47,7 @@ class DriveViewModel @Inject constructor(
         viewModelScope.launch { endedSessionId.value = recordEngine.end() }
     }
 
-    /**
-     * [개발자용] 내비의 목적지 도착을 흉내 낸다.
-     * 실제 내비 도착 이벤트(NaviHelper `onDestinationArrived`)를 연결하면 삭제한다.
-     */
-    fun onDevArriveClick() {
-        val placeName = uiState.value.nextDevPlaceName
-        viewModelScope.launch { recordEngine.arrive(placeName = placeName, address = null) }
-    }
-
-    /** [개발자용] 시동을 다시 켠 것을 흉내 낸다. 실제 신호는 화면 켜짐 방송으로도 들어온다. */
-    fun onDevRestartClick() {
-        viewModelScope.launch { recordEngine.markReturned() }
-    }
-
     private companion object {
         const val STOP_TIMEOUT_MILLIS = 5_000L
-
-        // [개발자용] 도착을 흉내 낼 때 쓰는 장소 이름. 화면 설계 문서의 예시 장소다.
-        val DEV_PLACE_NAMES = listOf("교동 뭉티기", "앞산 카페", "수성못")
     }
 }

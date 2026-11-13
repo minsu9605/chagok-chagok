@@ -3,17 +3,13 @@ package com.chagokchagok.feature.record.drive
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -27,7 +23,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -57,8 +52,7 @@ import kotlinx.coroutines.delay
  * 주행 중 화면 (화면 11).
  *
  * 시안은 순정 내비가 큰 창, 이 앱의 미니 패널이 작은 창에 뜨는 모습이다.
- * 창 배치는 앱이 정할 수 없으므로, 창이 넓으면 왼쪽에 내비 자리를 비워 두고 오른쪽에 미니 패널을 놓는다.
- * 창이 좁으면(작은 창) 미니 패널만 보인다.
+ * 창 배치는 시스템과 사용자가 정한다. 이 화면은 주어진 창 전체에 미니 패널만 그린다.
  *
  * @param justStarted 방금 기록을 시작해서 왔으면 true. 시작 안내 토스트를 띄운다 (화면 08, 09)
  * @param autoStarted 좌석 1명이라 묻지 않고 시작했으면 true
@@ -113,8 +107,6 @@ fun DriveScreen(
         onVoiceClick = askViewModel::onOpen,
         onHomeClick = onHomeClick,
         onEndRecordClick = viewModel::onEndRecordClick,
-        onDevArriveClick = viewModel::onDevArriveClick,
-        onDevRestartClick = viewModel::onDevRestartClick,
         modifier = modifier,
     )
 }
@@ -131,8 +123,6 @@ private fun DriveContent(
     askStage: AskStage? = null,
     askActions: AskActions = AskActions(),
     onVoiceClick: () -> Unit = {},
-    onDevArriveClick: () -> Unit = {},
-    onDevRestartClick: () -> Unit = {},
 ) {
     val relation = uiState.relation ?: return
 
@@ -144,45 +134,29 @@ private fun DriveContent(
         }
     }
 
-    BoxWithConstraints(
+    Box(
         modifier = modifier
             .fillMaxSize()
             .background(ChagokTheme.colors.background),
     ) {
-        val panelOnly = maxWidth < PANEL_ONLY_MAX_WIDTH
-
-        Row(modifier = Modifier.fillMaxSize()) {
-            if (!panelOnly) {
-                NaviPlaceholder(
-                    nextDevPlaceName = uiState.nextDevPlaceName,
-                    onDevArriveClick = onDevArriveClick,
-                    onDevRestartClick = onDevRestartClick,
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .padding(start = 16.dp, top = 16.dp, bottom = 16.dp),
-                )
-            }
-            val panelModifier = if (panelOnly) Modifier.fillMaxSize() else Modifier.width(PANEL_WIDTH).fillMaxHeight()
-            if (askStage != null) {
-                // 기억 물어보기는 미니 패널 자리를 차지한다 (화면 12~18).
-                AskPanel(
-                    stage = askStage,
-                    scopeRelation = relation,
-                    actions = askActions,
-                    modifier = panelModifier,
-                )
-            } else {
-                MiniPanel(
-                    relation = relation,
-                    placeNames = uiState.placeNames,
-                    pendingPlaceName = uiState.pendingPlaceName,
-                    onVoiceClick = onVoiceClick,
-                    onHomeClick = onHomeClick,
-                    onEndRecordClick = onEndRecordClick,
-                    modifier = panelModifier,
-                )
-            }
+        if (askStage != null) {
+            // 기억 물어보기는 미니 패널 자리를 차지한다 (화면 12~18).
+            AskPanel(
+                stage = askStage,
+                scopeRelation = relation,
+                actions = askActions,
+                modifier = Modifier.fillMaxSize(),
+            )
+        } else {
+            MiniPanel(
+                relation = relation,
+                placeNames = uiState.placeNames,
+                pendingPlaceName = uiState.pendingPlaceName,
+                onVoiceClick = onVoiceClick,
+                onHomeClick = onHomeClick,
+                onEndRecordClick = onEndRecordClick,
+                modifier = Modifier.fillMaxSize(),
+            )
         }
 
         val toastModifier = Modifier
@@ -197,64 +171,6 @@ private fun DriveContent(
                 modifier = toastModifier,
             )
         }
-    }
-}
-
-/**
- * 순정 내비가 뜰 자리. 이 앱은 지도를 그리지 않는다.
- * [개발자용] 내비 도착과 시동 다시 켬을 흉내 내는 버튼을 아래에 둔다. 실제 내비 연결을 확인하면 삭제한다.
- */
-@Composable
-private fun NaviPlaceholder(
-    nextDevPlaceName: String,
-    onDevArriveClick: () -> Unit,
-    onDevRestartClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier.background(ChagokTheme.colors.fill, RoundedCornerShape(20.dp)),
-        verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Icon(
-            imageVector = ChagokIcons.Navigation,
-            contentDescription = null,
-            modifier = Modifier.size(40.dp),
-            tint = ChagokTheme.colors.inkSecondary,
-        )
-        Text(
-            text = stringResource(R.string.feature_drive_navi_placeholder_title),
-            style = ChagokTheme.typography.cardTitle.copy(fontSize = 22.sp),
-            color = ChagokTheme.colors.ink,
-        )
-        Text(
-            text = stringResource(R.string.feature_drive_navi_placeholder_message),
-            style = ChagokTheme.typography.caption,
-            color = ChagokTheme.colors.inkSecondary,
-            textAlign = TextAlign.Center,
-        )
-        Spacer(modifier = Modifier.height(18.dp))
-        Text(
-            text = stringResource(R.string.feature_drive_dev_title),
-            style = ChagokTheme.typography.label.copy(fontWeight = FontWeight.Bold),
-            color = ChagokTheme.colors.inkSecondary,
-        )
-        ChagokButton(
-            text = stringResource(R.string.feature_drive_dev_arrive, nextDevPlaceName),
-            onClick = onDevArriveClick,
-            modifier = Modifier.width(260.dp),
-            style = ChagokButtonStyle.White,
-            height = 52.dp,
-            icon = ChagokIcons.Pin,
-        )
-        ChagokButton(
-            text = stringResource(R.string.feature_drive_dev_restart),
-            onClick = onDevRestartClick,
-            modifier = Modifier.width(260.dp),
-            style = ChagokButtonStyle.White,
-            height = 52.dp,
-            icon = ChagokIcons.Clock,
-        )
     }
 }
 
@@ -445,12 +361,6 @@ private fun VoiceAskButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
 }
 
 private const val START_TOAST_MILLIS = 4_000L
-
-// 이 너비보다 좁으면 작은 창으로 보고 미니 패널만 보인다.
-private val PANEL_ONLY_MAX_WIDTH = 600.dp
-
-// 시안의 작은 창 너비는 420. 큰 창(841) 안에서는 내비 자리를 남기려고 조금 줄인다.
-private val PANEL_WIDTH = 380.dp
 
 @Preview(name = "11 주행 중 · 큰 창", widthDp = 841, heightDp = 605)
 @Composable

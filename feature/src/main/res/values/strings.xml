@@ -71,13 +71,7 @@
     <string name="feature_drive_voice_ask">음성 질문하기</string>
     <string name="feature_drive_voice_ask_hint">“글레오야”라고 불러도 돼요</string>
     <string name="feature_drive_go_home">앱 홈 화면</string>
-    <string name="feature_drive_navi_placeholder_title">내비 화면 자리</string>
-    <string name="feature_drive_navi_placeholder_message">순정 내비가 연결되면\n이 자리에 길 안내가 보여요</string>
 
-    <!-- 주행 화면의 개발자용 버튼 -->
-    <string name="feature_drive_dev_title">개발자용 · 내비 흉내</string>
-    <string name="feature_drive_dev_arrive">도착 (%1$s)</string>
-    <string name="feature_drive_dev_restart">시동 다시 켬</string>
     <string name="feature_drive_pending">%1$s 도착 · 시동을 껐다 켜면 기억을 남겨요</string>
 
     <!-- 기억 남기기 (화면 23~28) -->

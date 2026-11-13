@@ -10,13 +10,11 @@ import com.chagokchagok.feature.common.RelationUi
  * @property placeNames 오늘 다녀온 곳 이름 (다녀온 순서)
  * @property pendingPlaceName 도착했지만 아직 평가하지 않은 곳. 없으면 null
  * @property endedSessionId [기록 종료]로 방금 끝낸 기록의 id. 끝내지 않았으면 null
- * @property nextDevPlaceName [개발자용] [도착]을 누르면 도착할 곳의 이름
  */
 data class DriveUiState(
     val loaded: Boolean = false,
     val relation: RelationUi? = null,
     val placeNames: List<String> = emptyList(),
     val pendingPlaceName: String? = null,
-    val nextDevPlaceName: String = "",
     val endedSessionId: String? = null,
 )
