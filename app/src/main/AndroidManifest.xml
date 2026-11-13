@@ -17,6 +17,10 @@
         <activity
             android:name=".MainActivity"
             android:exported="true">
+            <!-- 주행 중(D)에도 화면이 가려지지 않게 한다. 주행 중 제한(영상·설정 금지 등)은 앱이 직접 지켜야 한다. -->
+            <meta-data
+                android:name="distractionOptimized"
+                android:value="true" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
