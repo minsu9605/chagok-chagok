@@ -5,13 +5,15 @@ plugins {
 
 android {
     namespace = "com.chagokchagok.core.pleos"
+    // 주행 중 UX 제한(CarUxRestrictionsManager)을 받는 AAOS 차량 API. 기기에는 시스템에 들어 있다.
+    useLibrary("android.car")
 }
 
 dependencies {
     implementation(project(":core:domain"))
     implementation(libs.kotlinx.coroutines.core)
 
-    // Pleos Connect SDK. 호출 코드와 권한 선언은 연동 단계에서 추가한다.
+    // Pleos Connect SDK
     implementation(libs.pleos.vehicle)
     implementation(libs.pleos.navihelper)
     implementation(libs.pleos.speechtotext)

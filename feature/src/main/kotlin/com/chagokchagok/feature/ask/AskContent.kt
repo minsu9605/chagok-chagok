@@ -49,8 +49,9 @@ import com.chagokchagok.core.designsystem.theme.chagokShadow
 import com.chagokchagok.feature.R
 import com.chagokchagok.feature.common.RelationUi
 import com.chagokchagok.feature.common.icon
-import com.chagokchagok.feature.common.palette
 import com.chagokchagok.feature.common.objectParticle
+import com.chagokchagok.feature.common.palette
+import com.chagokchagok.feature.common.rememberKeyboardAllowed
 
 /** 기억 물어보기에서 일어나는 동작 묶음. */
 internal data class AskActions(
@@ -84,6 +85,7 @@ internal fun AskListeningBody(
     modifier: Modifier = Modifier,
 ) {
     val circle = ChagokTheme.shapes.pill
+    val keyboardAllowed = rememberKeyboardAllowed()
     val textStyle = ChagokTheme.typography.cardTitle.copy(fontSize = 19.sp, lineHeight = 27.sp, textAlign = TextAlign.Center)
 
     Column(
@@ -93,7 +95,11 @@ internal fun AskListeningBody(
     ) {
         Text(
             text = stringResource(
-                if (listening.listening) R.string.feature_ask_listening else R.string.feature_ask_typing,
+                when {
+                    listening.listening -> R.string.feature_ask_listening
+                    !keyboardAllowed -> R.string.feature_keyboard_blocked
+                    else -> R.string.feature_ask_typing
+                },
             ),
             style = ChagokTheme.typography.label.copy(fontWeight = FontWeight.Bold),
             color = ChagokTheme.colors.mintInk,
@@ -121,7 +127,7 @@ internal fun AskListeningBody(
         }
         SoundBars(moving = listening.listening)
         Box(contentAlignment = Alignment.Center) {
-            if (listening.text.isEmpty()) {
+            if (listening.text.isEmpty() && (listening.listening || keyboardAllowed)) {
                 Text(
                     text = stringResource(
                         if (listening.listening) {
@@ -138,6 +144,7 @@ internal fun AskListeningBody(
                 value = listening.text,
                 onValueChange = onQuestionChange,
                 modifier = Modifier.fillMaxWidth(),
+                enabled = keyboardAllowed,
                 textStyle = textStyle.copy(color = ChagokTheme.colors.ink),
                 cursorBrush = SolidColor(ChagokTheme.colors.mint),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),

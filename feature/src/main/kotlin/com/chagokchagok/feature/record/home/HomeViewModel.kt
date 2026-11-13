@@ -66,10 +66,11 @@ class HomeViewModel @Inject constructor(
         combine(
             diaryRepository.observeSummary(),
             diaryRepository.observeVisitCountOn(LocalDate.now()),
-            ::Pair,
+            diaryRepository.observeDiaries(),
+            ::Triple,
         ),
         localState,
-    ) { seatCount, progress, lastDiary, (diarySummary, todayPlaceCount), local ->
+    ) { seatCount, progress, lastDiary, (diarySummary, todayPlaceCount, diaries), local ->
         HomeUiState(
             dateText = LocalDate.now().format(TODAY_FORMATTER),
             seatCount = seatCount,
@@ -78,6 +79,7 @@ class HomeViewModel @Inject constructor(
             diarySummary = DiarySummaryUi(
                 diaryCount = diarySummary.diaryCount,
                 pinCount = diarySummary.pinCount,
+                pins = pinsOf(diaries),
             ),
             recording = progress?.toUi(),
             relationPicker = local.relationPicker,
@@ -199,6 +201,17 @@ class HomeViewModel @Inject constructor(
 
     private fun recommendedMode(seatCount: Int): RelationPickerMode =
         if (seatCount == 2) RelationPickerMode.TWO else RelationPickerMode.THREE_OR_MORE
+
+    /** 다녀온 곳마다 그곳을 가장 최근에 다녀온 관계 하나. [diaries]는 최근 것부터이고, 결과는 먼저 다녀온 곳부터다. */
+    private fun pinsOf(diaries: List<Diary>): List<RelationUi> {
+        val latestByPlace = LinkedHashMap<String, RelationUi>()
+        diaries.forEach { diary ->
+            diary.visits.forEach { saved ->
+                latestByPlace.getOrPut(saved.place.id) { diary.session.relation.toUi() }
+            }
+        }
+        return latestByPlace.values.reversed()
+    }
 
     private fun Diary.toLastRecordUi() = LastRecordUi(
         dateText = session.sessionDate.format(MONTH_DAY_FORMATTER),

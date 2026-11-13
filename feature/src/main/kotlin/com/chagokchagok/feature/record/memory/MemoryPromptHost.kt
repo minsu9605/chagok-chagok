@@ -54,6 +54,7 @@ import com.chagokchagok.feature.R
 import com.chagokchagok.feature.common.RelationUi
 import com.chagokchagok.feature.common.icon
 import com.chagokchagok.feature.common.palette
+import com.chagokchagok.feature.common.rememberKeyboardAllowed
 import kotlin.math.ceil
 
 /**
@@ -219,6 +220,7 @@ internal fun MemoDialog(
     hint: String = stringResource(R.string.feature_memory_memo_auto_save_hint),
 ) {
     val circle = ChagokTheme.shapes.pill
+    val keyboardAllowed = rememberKeyboardAllowed()
 
     ChagokDialog(modifier = modifier, width = 700.dp) {
         Row(
@@ -278,17 +280,17 @@ internal fun MemoDialog(
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
                     text = stringResource(
-                        if (memo.listening) {
-                            R.string.feature_memory_memo_input_label
-                        } else {
-                            R.string.feature_memory_memo_input_label_typing
+                        when {
+                            memo.listening -> R.string.feature_memory_memo_input_label
+                            !keyboardAllowed -> R.string.feature_keyboard_blocked
+                            else -> R.string.feature_memory_memo_input_label_typing
                         },
                     ),
                     style = ChagokTheme.typography.label.copy(fontWeight = FontWeight.Bold),
                     color = ChagokTheme.colors.mintInk,
                 )
                 Box {
-                    if (memo.text.isEmpty()) {
+                    if (memo.text.isEmpty() && (memo.listening || keyboardAllowed)) {
                         Text(
                             text = stringResource(
                                 if (memo.listening) {
@@ -305,6 +307,7 @@ internal fun MemoDialog(
                         value = memo.text,
                         onValueChange = onTextChange,
                         modifier = Modifier.fillMaxWidth(),
+                        enabled = keyboardAllowed,
                         textStyle = ChagokTheme.typography.cardTitle.copy(
                             fontSize = 21.sp,
                             color = ChagokTheme.colors.ink,

@@ -49,10 +49,15 @@ data class LastRecordUi(
     val placeCount: Int,
 )
 
-/** 일기 보기 위젯의 "일기 10권 · 핀 20곳". */
+/**
+ * 일기 보기 위젯의 "일기 10권 · 핀 20곳"과 지도 그림의 핀.
+ *
+ * @property pins 다녀온 곳마다 하나씩, 그곳을 가장 최근에 다녀온 관계. 먼저 다녀온 곳부터
+ */
 data class DiarySummaryUi(
     val diaryCount: Int,
     val pinCount: Int,
+    val pins: List<RelationUi> = emptyList(),
 )
 
 /**

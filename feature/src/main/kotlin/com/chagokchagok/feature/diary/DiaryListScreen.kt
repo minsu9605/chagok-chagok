@@ -286,7 +286,7 @@ private fun PinMap(
         val width = maxWidth
         val height = maxHeight
 
-        MapBackdrop(showPins = false, modifier = Modifier.fillMaxSize())
+        MapBackdrop(modifier = Modifier.fillMaxSize())
         uiState.pins.forEach { pin ->
             val position = PIN_POSITIONS[pin.slot % PIN_POSITIONS.size]
             MapPin(

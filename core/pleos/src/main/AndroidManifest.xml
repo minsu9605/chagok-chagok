@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- 내비 정보 조회, 경로 요청, 내비 화면 요청 (NaviHelper SDK) -->
-    <uses-permission android:name="pleos.car.permission.NAVI_ROUTE" />
-    <uses-permission android:name="pleos.car.permission.NAVI_ROUTE_SEARCH" />
+    <!-- 내비 화면 요청 (NaviHelper SDK requestNavigationScreen) -->
     <uses-permission android:name="pleos.car.permission.NAVI_CUSTOM_MAP" />
 
     <!-- 좌석 착석 조회 (Vehicle SDK) -->
@@ -13,12 +11,5 @@
     <uses-permission android:name="pleos.car.permission.STT_SERVICE" />
     <uses-permission android:name="pleos.car.permission.TTS_SERVICE" />
 
-    <application>
-        <!-- [확인용] 에뮬레이터에서 SDK 동작을 확인하는 화면. 확인이 끝나면 삭제한다. -->
-        <activity
-            android:name=".probe.SdkProbeActivity"
-            android:exported="true"
-            android:launchMode="singleTop" />
-    </application>
 
 </manifest>

@@ -39,6 +39,7 @@ import com.chagokchagok.core.designsystem.icon.ChagokIcons
 import com.chagokchagok.core.designsystem.theme.ChagokTheme
 import com.chagokchagok.core.designsystem.theme.chagokShadow
 import com.chagokchagok.feature.R
+import com.chagokchagok.feature.common.palette
 
 /*
  * 홈의 일기 보기 · 코스 짜기 · 기억 물어보기 위젯.
@@ -63,7 +64,7 @@ internal fun DiaryWidget(summary: DiarySummaryUi?, onClick: () -> Unit, modifier
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             MapBackdrop(
-                showPins = summary != null && summary.pinCount > 0,
+                pins = summary?.pins.orEmpty().map { it.palette.band },
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
@@ -263,28 +264,14 @@ private fun AskExamplePill(text: String, compact: Boolean) {
 }
 
 /**
- * 지도 바탕 그림: 땅 위에 공원·물·길과 예시 핀을 그린다. 실제 지도와 실제 기록이 아니라 시안의 지도 그림을 흉내 낸 것이다.
+ * 지도 바탕 그림: 땅 위에 공원·물·길을 그리고, 받은 핀을 정해 둔 자리에 찍는다.
+ * 실제 지도와 실제 좌표가 아니라 시안의 지도 그림을 흉내 낸 것이다. 핀의 개수와 색은 실제 기록이다.
  * 색의 기준: 화면 설계 개요 2-1의 지도 색. 지도 기능은 2차라 테마에 넣지 않고 여기서만 쓴다.
+ *
+ * @param pins 찍을 핀의 색. 자리가 [PIN_SPOTS]만큼이라 그보다 많으면 앞에서부터 그만큼만 찍는다
  */
 @Composable
-internal fun MapBackdrop(showPins: Boolean, modifier: Modifier = Modifier) {
-    val relationColors = ChagokTheme.colors.relation
-    // 예시 핀: (가로 위치, 세로 위치, 색). 위치는 그림 크기에 대한 비율이다.
-    val pins = listOf(
-        Triple(0.76f, 0.12f, relationColors.couple.band),
-        Triple(0.90f, 0.20f, relationColors.family.band),
-        Triple(0.62f, 0.24f, relationColors.solo.band),
-        Triple(0.45f, 0.38f, relationColors.couple.band),
-        Triple(0.84f, 0.40f, relationColors.couple.band),
-        Triple(0.74f, 0.52f, relationColors.couple.band),
-        Triple(0.30f, 0.60f, relationColors.couple.band),
-        Triple(0.20f, 0.78f, relationColors.couple.band),
-        Triple(0.37f, 0.90f, relationColors.friend.band),
-        Triple(0.60f, 0.96f, relationColors.friend.band),
-        Triple(0.76f, 0.92f, relationColors.friend.band),
-        Triple(0.91f, 0.90f, relationColors.friend.band),
-    )
-
+internal fun MapBackdrop(modifier: Modifier = Modifier, pins: List<Color> = emptyList()) {
     Canvas(modifier = modifier.background(MapGround)) {
         val width = size.width
         val height = size.height
@@ -322,11 +309,8 @@ internal fun MapBackdrop(showPins: Boolean, modifier: Modifier = Modifier) {
         roads.forEach { (start, end) ->
             drawLine(color = MapRoad, start = start, end = end, strokeWidth = roadWidth, cap = StrokeCap.Butt)
         }
-        // 예시 핀은 쌓인 핀이 있을 때만 그린다.
-        if (showPins) {
-            pins.forEach { (x, y, color) ->
-                drawPin(tip = Offset(width * x, height * y), color = color)
-            }
+        pins.zip(PIN_SPOTS).forEach { (color, spot) ->
+            drawPin(tip = Offset(width * spot.first, height * spot.second), color = color)
         }
     }
 }
@@ -355,3 +339,19 @@ private val MapPark = Color(0xFFD5ECCB)
 private val MapWater = Color(0xFFB8DCF5)
 private val MapRoad = Color(0xFFFFFFFF)
 private val MapRoadEdge = Color(0xFFE2DED4)
+
+// 핀을 찍는 자리 (그림 크기에 대한 비율, 핀의 뾰족한 끝). 실제 좌표가 아니다.
+private val PIN_SPOTS = listOf(
+    0.45f to 0.38f,
+    0.74f to 0.52f,
+    0.30f to 0.60f,
+    0.76f to 0.12f,
+    0.84f to 0.40f,
+    0.20f to 0.78f,
+    0.62f to 0.24f,
+    0.90f to 0.20f,
+    0.37f to 0.90f,
+    0.60f to 0.96f,
+    0.76f to 0.92f,
+    0.91f to 0.90f,
+)

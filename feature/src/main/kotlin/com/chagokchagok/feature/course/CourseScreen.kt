@@ -54,6 +54,7 @@ import com.chagokchagok.feature.R
 import com.chagokchagok.feature.common.RelationUi
 import com.chagokchagok.feature.common.icon
 import com.chagokchagok.feature.common.palette
+import com.chagokchagok.feature.common.rememberKeyboardAllowed
 import com.chagokchagok.feature.diary.DiaryHeader
 import com.chagokchagok.feature.diary.DiaryPage
 import com.chagokchagok.feature.diary.tabLabelRes
@@ -187,6 +188,7 @@ private fun ColumnScope.StartBody(
 ) {
     val relation = uiState.relation
     val circle = ChagokTheme.shapes.pill
+    val keyboardAllowed = rememberKeyboardAllowed()
 
     Row(
         modifier = Modifier.weight(1f),
@@ -253,17 +255,17 @@ private fun ColumnScope.StartBody(
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
                         text = stringResource(
-                            if (uiState.listening) {
-                                R.string.feature_course_listening
-                            } else {
-                                R.string.feature_ask_typing
+                            when {
+                                uiState.listening -> R.string.feature_course_listening
+                                !keyboardAllowed -> R.string.feature_keyboard_blocked
+                                else -> R.string.feature_ask_typing
                             },
                         ),
                         style = ChagokTheme.typography.label.copy(fontSize = 16.sp),
                         color = ChagokTheme.colors.mintInk,
                     )
                     Box {
-                        if (uiState.heardText.isEmpty()) {
+                        if (uiState.heardText.isEmpty() && (uiState.listening || keyboardAllowed)) {
                             Text(
                                 text = stringResource(
                                     if (uiState.listening) {
@@ -280,6 +282,7 @@ private fun ColumnScope.StartBody(
                             value = uiState.heardText,
                             onValueChange = actions.onTextChange,
                             modifier = Modifier.fillMaxWidth(),
+                            enabled = keyboardAllowed,
                             textStyle = ChagokTheme.typography.caption.copy(
                                 fontSize = 17.sp,
                                 fontWeight = FontWeight.Bold,

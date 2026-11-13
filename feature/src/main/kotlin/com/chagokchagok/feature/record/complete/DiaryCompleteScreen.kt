@@ -241,7 +241,7 @@ internal fun RouteMap(
         val width = maxWidth
         val height = maxHeight
 
-        MapBackdrop(showPins = false, modifier = Modifier.fillMaxSize())
+        MapBackdrop(modifier = Modifier.fillMaxSize())
         Canvas(modifier = Modifier.fillMaxSize()) {
             val points = listOf(HOME_POSITION) + ROUTE_POSITIONS.take(stops.size)
             points.zipWithNext().forEach { (from, to) ->

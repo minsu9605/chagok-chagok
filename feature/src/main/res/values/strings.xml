@@ -42,7 +42,6 @@
     <string name="feature_home_ask_description">음성 검색 · 남긴 기억에서 찾아 드려요</string>
     <string name="feature_home_ask_example_cafe">“지난번에 갔던 치즈케이크 카페 어디였지?”</string>
     <string name="feature_home_ask_example_visited">“우리 여기 전에 왔었나?”</string>
-    <string name="feature_home_coming_soon_toast">준비 중이에요</string>
 
     <!-- 기록 시작 안내 토스트 (화면 08, 09) -->
     <string name="feature_home_start_toast_title">%1$s의 차곡차곡 기록이 시작되었어요!</string>
@@ -121,6 +120,9 @@
     <plurals name="feature_complete_stay_hours">
         <item quantity="other">%1$d시간</item>
     </plurals>
+
+    <!-- 주행 중 키보드 금지 -->
+    <string name="feature_keyboard_blocked">주행 중에는 글자로 적을 수 없어요</string>
 
     <!-- 일기 보기 (화면 44~47) -->
     <string name="feature_diary_back_home">메인 홈으로</string>

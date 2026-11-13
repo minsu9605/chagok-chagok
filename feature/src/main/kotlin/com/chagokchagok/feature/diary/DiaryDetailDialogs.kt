@@ -43,6 +43,7 @@ import com.chagokchagok.core.designsystem.icon.ChagokIcons
 import com.chagokchagok.core.designsystem.theme.ChagokTheme
 import com.chagokchagok.core.designsystem.theme.chagokShadow
 import com.chagokchagok.feature.R
+import com.chagokchagok.feature.common.rememberKeyboardAllowed
 
 /**
  * 다시 말하기 (화면 50). 새로 말하면 지금 한마디가 바뀐다.
@@ -58,6 +59,7 @@ internal fun RespeakDialog(
     modifier: Modifier = Modifier,
 ) {
     val circle = ChagokTheme.shapes.pill
+    val keyboardAllowed = rememberKeyboardAllowed()
 
     ChagokDialog(modifier = modifier, width = 720.dp) {
         Row(
@@ -125,17 +127,17 @@ internal fun RespeakDialog(
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
                     text = stringResource(
-                        if (respeak.listening) {
-                            R.string.feature_memory_memo_input_label
-                        } else {
-                            R.string.feature_memory_memo_input_label_typing
+                        when {
+                            respeak.listening -> R.string.feature_memory_memo_input_label
+                            !keyboardAllowed -> R.string.feature_keyboard_blocked
+                            else -> R.string.feature_memory_memo_input_label_typing
                         },
                     ),
                     style = ChagokTheme.typography.label.copy(fontWeight = FontWeight.Bold),
                     color = ChagokTheme.colors.mintInk,
                 )
                 Box {
-                    if (respeak.text.isEmpty()) {
+                    if (respeak.text.isEmpty() && (respeak.listening || keyboardAllowed)) {
                         Text(
                             text = stringResource(
                                 if (respeak.listening) {
@@ -152,6 +154,7 @@ internal fun RespeakDialog(
                         value = respeak.text,
                         onValueChange = onTextChange,
                         modifier = Modifier.fillMaxWidth(),
+                        enabled = keyboardAllowed,
                         textStyle = ChagokTheme.typography.body.copy(
                             fontWeight = FontWeight.Bold,
                             color = ChagokTheme.colors.ink,
