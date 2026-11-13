@@ -6,6 +6,9 @@ import com.chagokchagok.core.domain.model.Rating
 import com.chagokchagok.core.domain.model.RecordProgress
 import com.chagokchagok.core.domain.record.RecordEngine
 import com.chagokchagok.core.domain.vehicle.IgnitionMonitor
+import com.chagokchagok.core.domain.voice.VoiceEvent
+import com.chagokchagok.core.domain.voice.VoiceRecognizer
+import com.chagokchagok.core.domain.voice.VoiceSpeaker
 import com.chagokchagok.feature.common.toUi
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -31,6 +34,8 @@ import javax.inject.Inject
 @HiltViewModel
 class MemoryPromptViewModel @Inject constructor(
     private val recordEngine: RecordEngine,
+    private val voiceRecognizer: VoiceRecognizer,
+    private val voiceSpeaker: VoiceSpeaker,
     ignitionMonitor: IgnitionMonitor,
 ) : ViewModel() {
 
@@ -38,6 +43,7 @@ class MemoryPromptViewModel @Inject constructor(
     private val afterRating = MutableStateFlow<MemoryPromptUi?>(null)
     private var rateTimeoutJob: Job? = null
     private var savedDraft: SavedDraft? = null
+    private var listenJob: Job? = null
 
     val uiState: StateFlow<MemoryPromptUi?> = combine(recordEngine.progress, afterRating) { progress, after ->
         after ?: progress?.toRateUi()
@@ -80,6 +86,7 @@ class MemoryPromptViewModel @Inject constructor(
             text = "",
         )
         savedDraft = SavedDraft(rate = rate, good = good)
+        startListening()
         viewModelScope.launch {
             recordEngine.rate(rate.visitId, if (good) Rating.GOOD else Rating.BAD)
         }
@@ -92,10 +99,48 @@ class MemoryPromptViewModel @Inject constructor(
         viewModelScope.launch { recordEngine.discardPending(rate.visitId) }
     }
 
+    /** 한마디를 손으로 고쳤다. 듣기는 멈춘다. */
     fun onMemoTextChange(text: String) {
+        listenJob?.cancel()
         afterRating.update { current ->
-            if (current is MemoryPromptUi.Memo) current.copy(text = text.take(MAX_MEMO_LENGTH)) else current
+            if (current is MemoryPromptUi.Memo) {
+                current.copy(text = text.take(MAX_MEMO_LENGTH), listening = false)
+            } else {
+                current
+            }
         }
+    }
+
+    /** 저장 완료 화면이 떴을 때. 같은 내용을 소리로도 알려 준다. */
+    fun onSavedShown(announcement: String) {
+        voiceSpeaker.speak(announcement)
+    }
+
+    /**
+     * 한마디를 마이크로 듣는다. 받아 적는 글을 화면에 보여 주고, 말이 끝나면 저절로 저장한다.
+     * 듣지 못하면 글자 입력으로 남긴다.
+     */
+    private fun startListening() {
+        listenJob?.cancel()
+        listenJob = viewModelScope.launch {
+            updateMemo { it.copy(listening = true) }
+            var finalText: String? = null
+            voiceRecognizer.listen().collect { event ->
+                when (event) {
+                    is VoiceEvent.Heard -> {
+                        updateMemo { it.copy(text = event.text.take(MAX_MEMO_LENGTH)) }
+                        if (event.completed) finalText = event.text
+                    }
+                    VoiceEvent.Failed -> Unit
+                }
+            }
+            updateMemo { it.copy(listening = false) }
+            if (!finalText.isNullOrBlank()) onMemoSaveClick()
+        }
+    }
+
+    private fun updateMemo(transform: (MemoryPromptUi.Memo) -> MemoryPromptUi.Memo) {
+        afterRating.update { current -> if (current is MemoryPromptUi.Memo) transform(current) else current }
     }
 
     /** 한마디 [저장] */
@@ -115,6 +160,7 @@ class MemoryPromptViewModel @Inject constructor(
 
 
     private fun showSaved(memo: String?) {
+        listenJob?.cancel()
         val draft = savedDraft ?: return
         afterRating.value = MemoryPromptUi.Saved(
             relation = draft.rate.relation,

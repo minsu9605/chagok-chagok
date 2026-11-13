@@ -123,11 +123,92 @@ class SdkProbeActivity : Activity() {
                 "cancel" -> naviHelper.cancelRoute()
                 "screen" -> naviHelper.requestNavigationScreen(NavigationScreenRequest.Foreground)
                 "seat" -> readSeats(register = false)
+                "stt" -> startStt(fromFile = false)
+                "sttfile" -> startStt(fromFile = true)
+                "tts" -> startTts()
                 else -> log("모르는 명령: $command")
             }
         } catch (e: Exception) {
             log("cmd $command THREW $e")
         }
+    }
+
+    private var speechToText: ai.pleos.playground.stt.SpeechToText? = null
+    private var textToSpeech: ai.pleos.playground.tts.TextToSpeech? = null
+
+    /**
+     * 차 안 엔진(ON_DEVICE)으로 한국어 음성 인식을 한 번 요청한다.
+     *
+     * @param fromFile true면 마이크 대신 앱 파일 폴더의 `stt-test.pcm`(16kHz, 16bit, mono)을 넣는다
+     */
+    private fun startStt(fromFile: Boolean) {
+        val stt = ai.pleos.playground.stt.SpeechToText(applicationContext, ai.pleos.playground.stt.constant.Mode.ON_DEVICE)
+        speechToText = stt
+        stt.addListener(
+            object : ai.pleos.playground.stt.listener.ResultListener {
+                override fun onReady() = log("stt onReady")
+                override fun onStartedRecognition() = log("stt onStartedRecognition")
+                override fun onUpdated(stt: String, completed: Boolean) = log("stt onUpdated '$stt' completed=$completed")
+                override fun onUpdatedEpdData(on: Long, off: Long) = log("stt epd on=$on off=$off")
+                override fun onUpdatedRms(rms: Double) = Unit
+                override fun onEndedRecognition() = log("stt onEndedRecognition")
+                override fun onError(errorType: ai.pleos.playground.stt.constant.ErrorType) = log("stt onError $errorType")
+            },
+        )
+        stt.initialize(
+            object : ai.pleos.playground.stt.listener.OnInitializeListener {
+                override fun onSuccess() {
+                    log("stt init success")
+                    stt.setLocale(java.util.Locale.KOREA)
+                    if (fromFile) {
+                        val pcm = java.io.File(filesDir, "stt-test.pcm").readBytes()
+                        // 가이드 문서의 예시대로 100ms 분량(3,200바이트)씩 실시간 속도로 보낸다.
+                        Thread {
+                            Thread.sleep(1_000)
+                            pcm.asList().chunked(3_200).forEach { chunk ->
+                                stt.sendAudio(chunk.toByteArray())
+                                Thread.sleep(100)
+                            }
+                            stt.completeAudioSend()
+                            log("stt sent ${pcm.size} bytes from file")
+                        }.start()
+                    } else {
+                        stt.request()
+                        log("stt request sent")
+                    }
+                }
+
+                override fun onFailure(errorType: ai.pleos.playground.stt.constant.ErrorType) = log("stt init FAILED $errorType")
+            },
+        )
+    }
+
+    /** 차 안 엔진(ON_DEVICE)으로 한국어 문장을 읽게 한다. */
+    private fun startTts() {
+        val tts = ai.pleos.playground.tts.TextToSpeech(applicationContext, ai.pleos.playground.tts.constant.Mode.ON_DEVICE)
+        textToSpeech = tts
+        tts.initialize(
+            object : ai.pleos.playground.tts.listener.OnInitializeListener {
+                override fun onSuccess() {
+                    log("tts init success")
+                tts.addEventListener(
+                    object : ai.pleos.playground.tts.listener.EventListener {
+                        override fun onReady() = log("tts onReady")
+                        override fun onStart() = log("tts onStart")
+                        override fun onUpdatedRms(rms: Double) = Unit
+                        override fun onDone() = log("tts onDone")
+                        override fun onStop() = log("tts onStop")
+                        override fun onError(errorType: ai.pleos.playground.tts.constant.ErrorType) = log("tts onError $errorType")
+                    },
+                )
+                    tts.setLocale(java.util.Locale.KOREA)
+                    tts.speak("차곡차곡 기록이 저장되었어요.")
+                    log("tts speak sent")
+                }
+
+                override fun onFailure(errorType: ai.pleos.playground.tts.constant.ErrorType) = log("tts init FAILED $errorType")
+            },
+        )
     }
 
     private fun readSeats(register: Boolean) {

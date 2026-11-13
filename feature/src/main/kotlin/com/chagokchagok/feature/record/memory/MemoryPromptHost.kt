@@ -82,7 +82,11 @@ fun MemoryPromptHost(
             onLaterClick = viewModel::onMemoLaterClick,
             modifier = modifier,
         )
-        is MemoryPromptUi.Saved -> SavedDialog(saved = current, modifier = modifier)
+        is MemoryPromptUi.Saved -> {
+            val announcement = stringResource(R.string.feature_memory_saved_title, current.placeName)
+            LaunchedEffect(current) { viewModel.onSavedShown(announcement) }
+            SavedDialog(saved = current, modifier = modifier)
+        }
     }
 }
 
@@ -202,7 +206,8 @@ private fun RateButton(
 
 /**
  * ② 한마디 (화면 24, 25).
- * 시안은 음성으로 받는다. 음성 연결 전이라 같은 자리에 글자 입력칸과 [저장]을 임시로 둔다.
+ * 마이크로 듣는 동안 받아 적은 글을 보여 주고, 말이 끝나면 저절로 저장한다.
+ * 마이크로 듣지 못할 때를 위해 같은 자리를 눌러 글자로 적고 [저장]할 수도 있다.
  */
 @Composable
 internal fun MemoDialog(
@@ -271,14 +276,26 @@ internal fun MemoDialog(
             }
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
-                    text = stringResource(R.string.feature_memory_memo_input_label),
+                    text = stringResource(
+                        if (memo.listening) {
+                            R.string.feature_memory_memo_input_label
+                        } else {
+                            R.string.feature_memory_memo_input_label_typing
+                        },
+                    ),
                     style = ChagokTheme.typography.label.copy(fontWeight = FontWeight.Bold),
                     color = ChagokTheme.colors.mintInk,
                 )
                 Box {
                     if (memo.text.isEmpty()) {
                         Text(
-                            text = stringResource(R.string.feature_memory_memo_input_placeholder),
+                            text = stringResource(
+                                if (memo.listening) {
+                                    R.string.feature_memory_memo_listening_placeholder
+                                } else {
+                                    R.string.feature_memory_memo_input_placeholder
+                                },
+                            ),
                             style = ChagokTheme.typography.cardTitle.copy(fontSize = 21.sp),
                             color = ChagokTheme.colors.inkSecondary,
                         )

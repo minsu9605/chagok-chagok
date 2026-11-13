@@ -92,6 +92,8 @@
     <string name="feature_memory_memo_example_good">예. 치즈케이크가 맛있었어</string>
     <string name="feature_memory_memo_example_bad">예. 주차가 너무 힘들었어</string>
     <string name="feature_memory_memo_input_label">듣고 있어요</string>
+    <string name="feature_memory_memo_input_label_typing">글자로 적어 주세요</string>
+    <string name="feature_memory_memo_listening_placeholder">말씀해 주세요</string>
     <string name="feature_memory_memo_input_placeholder">여기를 눌러 적어 주세요</string>
     <string name="feature_memory_memo_auto_save_hint">말을 멈추면 3초 뒤에 저절로 저장해요</string>
     <string name="feature_memory_memo_later">다음에 말하기</string>

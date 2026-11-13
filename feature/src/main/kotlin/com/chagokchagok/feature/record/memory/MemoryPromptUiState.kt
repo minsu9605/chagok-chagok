@@ -23,13 +23,15 @@ sealed interface MemoryPromptUi {
     /**
      * ② 한마디 (화면 24 좋았어요, 25 별로예요).
      *
-     * @property text 지금까지 적은 한마디
+     * @property text 지금까지 받아 적거나 손으로 적은 한마디
+     * @property listening 마이크로 듣고 있으면 true
      */
     data class Memo(
         val visitId: String,
         val placeName: String,
         val good: Boolean,
         val text: String,
+        val listening: Boolean = false,
     ) : MemoryPromptUi
 
     /**

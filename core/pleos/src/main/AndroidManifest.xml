@@ -9,6 +9,10 @@
     <!-- 좌석 착석 조회 (Vehicle SDK) -->
     <uses-permission android:name="pleos.car.permission.CAR_SEATS" />
 
+    <!-- 음성 인식, 음성으로 읽어 주기 (SpeechToText, TextToSpeech SDK) -->
+    <uses-permission android:name="pleos.car.permission.STT_SERVICE" />
+    <uses-permission android:name="pleos.car.permission.TTS_SERVICE" />
+
     <application>
         <!-- [확인용] 에뮬레이터에서 SDK 동작을 확인하는 화면. 확인이 끝나면 삭제한다. -->
         <activity
