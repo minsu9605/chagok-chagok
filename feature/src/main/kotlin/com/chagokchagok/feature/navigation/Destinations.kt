@@ -39,3 +39,11 @@ data object DiaryListDestination
  */
 @Serializable
 data class DiaryDetailDestination(val sessionId: String)
+
+/**
+ * 코스 짜기 (화면 36~43).
+ *
+ * @property relation 코스를 짤 관계. 도메인 `Relation`의 이름
+ */
+@Serializable
+data class CourseDestination(val relation: String)

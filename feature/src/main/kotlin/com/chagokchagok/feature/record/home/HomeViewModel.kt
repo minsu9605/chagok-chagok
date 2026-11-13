@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.chagokchagok.core.domain.diary.DiaryRepository
 import com.chagokchagok.core.domain.model.Diary
 import com.chagokchagok.core.domain.model.RecordProgress
+import com.chagokchagok.core.domain.model.Relation
 import com.chagokchagok.core.domain.record.RecordEngine
 import com.chagokchagok.core.domain.vehicle.SeatMonitor
 import com.chagokchagok.feature.common.RelationUi
@@ -38,6 +39,7 @@ class HomeViewModel @Inject constructor(
     private data class LocalState(
         val relationPicker: RelationPickerUi? = null,
         val guidePlaceName: String? = null,
+        val coursePicking: Boolean = false,
     )
 
     private val localState = MutableStateFlow(LocalState())
@@ -46,6 +48,11 @@ class HomeViewModel @Inject constructor(
 
     /** 기록을 시작했을 때 한 번 낸다. */
     val recordStarted: Flow<RecordStart> = _recordStarted.receiveAsFlow()
+
+    private val _courseRequested = Channel<Relation>(Channel.BUFFERED)
+
+    /** 코스 짜기를 열 때 한 번 낸다. 값은 코스를 짤 관계. */
+    val courseRequested: Flow<Relation> = _courseRequested.receiveAsFlow()
 
     private val _recordEnded = Channel<String>(Channel.BUFFERED)
 
@@ -75,6 +82,7 @@ class HomeViewModel @Inject constructor(
             recording = progress?.toUi(),
             relationPicker = local.relationPicker,
             guidePlaceName = local.guidePlaceName,
+            coursePicking = local.coursePicking,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -119,8 +127,35 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    /**
+     * [코스 짜기] (화면 34, 35). 이미 기록 중이면 그 관계로, 좌석 1명이면 '나 혼자'로 바로 연다.
+     * 아니면 누구와 함께할 코스인지 먼저 묻는다.
+     */
+    fun onCourseClick() {
+        val state = uiState.value
+        val recordingRelation = state.recording?.relation
+        when {
+            recordingRelation != null -> _courseRequested.trySend(recordingRelation.toDomain())
+            state.seatCount <= 1 -> _courseRequested.trySend(Relation.SOLO)
+            else -> localState.update {
+                it.copy(
+                    relationPicker = RelationPickerUi(
+                        mode = recommendedMode(state.seatCount),
+                        seatCount = state.seatCount,
+                    ),
+                    coursePicking = true,
+                )
+            }
+        }
+    }
+
     /** 관계 타일을 눌렀을 때. 고른 관계는 기록이 끝날 때까지 바뀌지 않는다. */
     fun onRelationClick(relation: RelationUi) {
+        if (localState.value.coursePicking) {
+            localState.update { it.copy(relationPicker = null, coursePicking = false) }
+            _courseRequested.trySend(relation.toDomain())
+            return
+        }
         startRecord(relation = relation, autoStarted = false, guided = localState.value.guidePlaceName != null)
     }
 
@@ -146,7 +181,7 @@ class HomeViewModel @Inject constructor(
 
     /** 관계 팝업의 [✕] */
     fun onRelationPickerClose() {
-        localState.update { it.copy(relationPicker = null, guidePlaceName = null) }
+        localState.update { it.copy(relationPicker = null, guidePlaceName = null, coursePicking = false) }
     }
 
     private fun showRelationPicker(mode: RelationPickerMode, seatCount: Int) {

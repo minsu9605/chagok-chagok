@@ -10,14 +10,15 @@ import android.util.Log
 import com.chagokchagok.core.domain.voice.VoiceEvent
 import com.chagokchagok.core.domain.voice.VoiceRecognizer
 import dagger.hilt.android.qualifiers.ApplicationContext
+import java.util.Locale
+import java.util.concurrent.atomic.AtomicBoolean
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
-import java.util.Locale
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * SpeechToText SDK의 차 안 엔진(ON_DEVICE)으로 한국어를 받아 적는다.
@@ -33,6 +34,8 @@ class PleosVoiceRecognizer @Inject constructor(
 
     override fun listen(): Flow<VoiceEvent> = callbackFlow {
         val speechToText = SpeechToText(context, Mode.ON_DEVICE)
+        // 준비(initialize)가 끝나기 전에 듣기를 그만둘 수 있다. 그 뒤에 준비가 끝나도 마이크를 켜지 않도록 표시해 둔다.
+        val stopped = AtomicBoolean(false)
         val listener = object : ResultListener {
             override fun onReady() = Unit
             override fun onStartedRecognition() = Unit
@@ -63,8 +66,11 @@ class PleosVoiceRecognizer @Inject constructor(
         speechToText.initialize(
             object : OnInitializeListener {
                 override fun onSuccess() {
+                    if (stopped.get()) return
                     speechToText.setLocale(Locale.KOREA)
                     speechToText.request()
+                    // 요청하는 사이에 그만뒀다면 방금 켠 마이크를 다시 끈다.
+                    if (stopped.get()) speechToText.stop()
                 }
 
                 override fun onFailure(errorType: ErrorType) {
@@ -76,6 +82,7 @@ class PleosVoiceRecognizer @Inject constructor(
         )
 
         awaitClose {
+            stopped.set(true)
             try {
                 speechToText.stop()
                 speechToText.removeListener(listener)

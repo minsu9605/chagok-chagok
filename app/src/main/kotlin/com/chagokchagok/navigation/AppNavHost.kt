@@ -9,8 +9,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import com.chagokchagok.feature.course.CourseScreen
 import com.chagokchagok.feature.diary.DiaryDetailScreen
 import com.chagokchagok.feature.diary.DiaryListScreen
+import com.chagokchagok.feature.navigation.CourseDestination
 import com.chagokchagok.feature.navigation.DiaryCompleteDestination
 import com.chagokchagok.feature.navigation.DiaryDetailDestination
 import com.chagokchagok.feature.navigation.DiaryListDestination
@@ -59,6 +61,9 @@ fun AppNavHost(
                         )
                     },
                     onDiaryClick = { navController.navigate(DiaryListDestination) { launchSingleTop = true } },
+                    onCourseOpen = { relation ->
+                        navController.navigate(CourseDestination(relation)) { launchSingleTop = true }
+                    },
                 )
             }
             composable<DriveDestination> { backStackEntry ->
@@ -76,6 +81,15 @@ fun AppNavHost(
             composable<DiaryCompleteDestination> {
                 DiaryCompleteScreen(
                     onCloseClick = { navController.popBackStack(route = HomeDestination, inclusive = false) },
+                )
+            }
+            composable<CourseDestination> {
+                CourseScreen(
+                    onHomeClick = { navController.popBackStack(route = HomeDestination, inclusive = false) },
+                    onDeparted = { newRecord ->
+                        // 갈 곳이 정해진 채 시작한다. 하던 기록에 이어서 쌓을 때는 시작 안내를 띄우지 않는다.
+                        showDrive(DriveDestination(justStarted = newRecord, guided = newRecord))
+                    },
                 )
             }
             composable<DiaryListDestination> {

@@ -13,6 +13,7 @@ import com.chagokchagok.feature.common.RelationUi
  * @property recording 기록 중이면 그 상태, 아니면 null
  * @property relationPicker 관계 고르기 팝업이 떠 있으면 그 상태, 아니면 null (화면 05~07)
  * @property guidePlaceName 길 안내할 곳이 정해진 채로 관계를 묻는 중이면 그 장소 이름, 아니면 null (화면 19-1)
+ * @property coursePicking 코스를 짤 관계를 묻는 중이면 true (화면 34, 35)
  */
 data class HomeUiState(
     val dateText: String = "",
@@ -23,6 +24,7 @@ data class HomeUiState(
     val recording: RecordingUi? = null,
     val relationPicker: RelationPickerUi? = null,
     val guidePlaceName: String? = null,
+    val coursePicking: Boolean = false,
 )
 
 /**

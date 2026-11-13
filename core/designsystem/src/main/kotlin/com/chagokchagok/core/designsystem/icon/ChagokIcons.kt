@@ -173,6 +173,21 @@ object ChagokIcons {
         strokeIcon("Search", circle(cx = 11f, cy = 11f, radius = 7f), "m20 20-3.5-3.5")
     }
 
+    /** 바다 */
+    val Waves: ImageVector by lazy {
+        strokeIcon(
+            "Waves",
+            "M2 7c2-2 4-2 6 0s4 2 6 0 4-2 6 0",
+            "M2 12c2-2 4-2 6 0s4 2 6 0 4-2 6 0",
+            "M2 17c2-2 4-2 6 0s4 2 6 0 4-2 6 0",
+        )
+    }
+
+    /** 식사 (그릇) */
+    val Bowl: ImageVector by lazy {
+        strokeIcon("Bowl", "M3 11h18a9 9 0 0 1-18 0Z", "M9 4c0 1.2 1 1.6 1 3", "M14 4c0 1.2 1 1.6 1 3")
+    }
+
     val Check: ImageVector by lazy { strokeIcon("Check", "M20 6 9 17l-5-5") }
 
     /** 주의 (동그라미 안 느낌표) */

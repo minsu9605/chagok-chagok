@@ -23,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
@@ -50,10 +51,14 @@ import com.chagokchagok.feature.record.home.RelationPickerUi
  *
  * @property chipText 맨 위 칩. 예: "지난 일기에서 다시 출발"
  * @property noteText 아래 안내. 예: "새 기록은 오늘 날짜로 쌓이고, 지난 일기는 그대로예요."
+ * @property titleText 물음을 바꿀 때의 문구. null이면 기록 시작 때와 같은 물음을 쓴다
+ * @property chipIcon 맨 위 칩의 아이콘
  */
 internal data class RelationPickerGuide(
     val chipText: String,
     val noteText: String,
+    val titleText: String? = null,
+    val chipIcon: ImageVector = ChagokIcons.Navigation,
 )
 
 /**
@@ -112,7 +117,7 @@ private fun ColumnScope.RecommendedRelationsContent(
             ChagokChip(
                 text = guide.chipText,
                 colors = ChagokChipDefaults.mint(),
-                icon = ChagokIcons.Navigation,
+                icon = guide.chipIcon,
                 height = 40.dp,
             )
             ChagokChip(
@@ -131,7 +136,7 @@ private fun ColumnScope.RecommendedRelationsContent(
         )
     }
     Text(
-        text = stringResource(
+        text = guide?.titleText ?: stringResource(
             if (isTwo) R.string.feature_relation_picker_title_two else R.string.feature_relation_picker_title_group,
         ),
         modifier = Modifier.fillMaxWidth(),

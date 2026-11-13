@@ -1,8 +1,5 @@
 package com.chagokchagok.feature.record.drive
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,9 +20,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -43,7 +38,6 @@ import com.chagokchagok.core.designsystem.component.ChagokButton
 import com.chagokchagok.core.designsystem.component.ChagokButtonStyle
 import com.chagokchagok.core.designsystem.component.ChagokChip
 import com.chagokchagok.core.designsystem.component.ChagokChipDefaults
-import com.chagokchagok.core.designsystem.component.ChagokToast
 import com.chagokchagok.core.designsystem.component.ChagokWidgetCard
 import com.chagokchagok.core.designsystem.icon.ChagokIcons
 import com.chagokchagok.core.designsystem.theme.ChagokTheme

@@ -224,6 +224,7 @@ private fun MetaText(text: String) {
  * 실제 지도와 실제 좌표가 아니다. 지도와 좌표를 붙이기 전까지 순서만 보여 주는 그림이다.
  *
  * @param labelRes 왼쪽 위 이름표의 문구. 순서 표시("→ ① → ②")가 들어갈 자리 하나를 가진다
+ * @param originLabelRes 출발하는 곳의 이름. 예: "출발지", "현재 위치"
  */
 @Composable
 internal fun RouteMap(
@@ -231,6 +232,7 @@ internal fun RouteMap(
     placeNames: List<String>,
     modifier: Modifier = Modifier,
     @StringRes labelRes: Int = R.string.feature_complete_route,
+    @StringRes originLabelRes: Int = R.string.feature_complete_origin,
 ) {
     val lineColor = relation.palette.band
     val stops = placeNames.take(ROUTE_POSITIONS.size)
@@ -256,7 +258,7 @@ internal fun RouteMap(
             x = width * HOME_POSITION.first,
             y = height * HOME_POSITION.second,
             color = ChagokTheme.colors.ink,
-            label = stringResource(R.string.feature_complete_origin),
+            label = stringResource(originLabelRes),
         ) {
             Icon(
                 imageVector = ChagokIcons.House,

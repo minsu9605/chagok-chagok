@@ -120,7 +120,7 @@ object MemoryAsk {
         visit.place.name.contains(keyword) || visit.visit.memoText.orEmpty().contains(keyword)
 
     /** 질문에서 찾는 말만 남긴다. 조사와 물음말, 흔한 꾸밈말은 뺀다. */
-    internal fun keywordsOf(question: String): List<String> =
+    fun keywordsOf(question: String): List<String> =
         question
             .split(WORD_BREAK)
             .map { it.trim() }

@@ -1,8 +1,5 @@
 package com.chagokchagok.feature.record.home
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,11 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,7 +28,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.chagokchagok.core.designsystem.component.ChagokToast
 import com.chagokchagok.core.designsystem.icon.ChagokIcons
 import com.chagokchagok.core.designsystem.theme.ChagokTheme
 import com.chagokchagok.core.designsystem.theme.chagokShadow
@@ -51,11 +43,12 @@ import com.chagokchagok.feature.common.RelationUi
 import com.chagokchagok.feature.common.icon
 import com.chagokchagok.feature.common.palette
 import com.chagokchagok.feature.record.relation.RelationPickerDialog
-import kotlinx.coroutines.delay
 
 /**
  * 메인 홈 (화면 02 기록 꺼짐, 10 기록 중).
- * 쌓기 위젯, 일기 보기, 기억 물어보기가 동작한다. 코스 짜기는 누르면 "준비 중이에요" 토스트만 띄운다.
+ * 쌓기, 일기 보기, 코스 짜기, 기억 물어보기 위젯이 모두 동작한다.
+ *
+ * @param onCourseOpen 코스 짜기를 열 때. 값은 코스를 짤 관계(도메인 `Relation`의 이름)
  */
 @Composable
 fun HomeScreen(
@@ -64,6 +57,7 @@ fun HomeScreen(
     onRecordEnded: (sessionId: String) -> Unit = {},
     onRecordStarted: (autoStarted: Boolean, guided: Boolean) -> Unit = { _, _ -> },
     onDiaryClick: () -> Unit = {},
+    onCourseOpen: (relation: String) -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel(),
     askViewModel: AskViewModel = hiltViewModel(),
 ) {
@@ -82,6 +76,10 @@ fun HomeScreen(
         }
     }
     AskAnnouncement(stage = askUiState.stage, onAnswerShown = askViewModel::onAnswerShown)
+    val currentOnCourseOpen by rememberUpdatedState(onCourseOpen)
+    LaunchedEffect(viewModel) {
+        viewModel.courseRequested.collect { relation -> currentOnCourseOpen(relation.name) }
+    }
     val currentOnRecordStarted by rememberUpdatedState(onRecordStarted)
 
     // 기록을 시작하면 주행 화면으로 넘어간다. 시작 안내 토스트는 그 화면이 띄운다.
@@ -100,6 +98,7 @@ fun HomeScreen(
             onGoToNaviClick = onGoToNaviClick,
             onDiaryClick = onDiaryClick,
             onAskClick = askViewModel::onOpen,
+            onCourseClick = viewModel::onCourseClick,
             onEndRecordClick = viewModel::onEndRecordClick,
             onRelationClick = viewModel::onRelationClick,
             onShowAllRelationsClick = viewModel::onShowAllRelationsClick,
@@ -125,6 +124,7 @@ private data class HomeActions(
     val onGoToNaviClick: () -> Unit = {},
     val onDiaryClick: () -> Unit = {},
     val onAskClick: () -> Unit = {},
+    val onCourseClick: () -> Unit = {},
     val onEndRecordClick: () -> Unit = {},
     val onRelationClick: (RelationUi) -> Unit = {},
     val onShowAllRelationsClick: () -> Unit = {},
@@ -152,17 +152,6 @@ private fun HomeContent(
             else -> HomeLayout.Wide
         }
         val compact = layout != HomeLayout.Wide
-
-        // 준비 중인 위젯을 누를 때마다 1씩 올라간다. 값이 바뀌면 토스트를 다시 띄운다.
-        var comingSoonClickCount by remember { mutableIntStateOf(0) }
-        var comingSoonToastVisible by remember { mutableStateOf(false) }
-        LaunchedEffect(comingSoonClickCount) {
-            if (comingSoonClickCount > 0) {
-                comingSoonToastVisible = true
-                delay(COMING_SOON_TOAST_MILLIS)
-                comingSoonToastVisible = false
-            }
-        }
 
         Column(
             modifier = Modifier
@@ -198,7 +187,7 @@ private fun HomeContent(
                         compact = compact,
                         onDiaryClick = actions.onDiaryClick,
                         onAskClick = actions.onAskClick,
-                        onComingSoonClick = { comingSoonClickCount++ },
+                        onCourseClick = actions.onCourseClick,
                         modifier = Modifier
                             .weight(OTHERS_WEIGHT)
                             .fillMaxHeight(),
@@ -215,15 +204,38 @@ private fun HomeContent(
                 onShowAllClick = actions.onShowAllRelationsClick,
                 onBackToRecommendedClick = actions.onBackToRecommendedClick,
                 onCloseClick = actions.onRelationPickerClose,
-                guide = uiState.guidePlaceName?.let { placeName ->
-                    RelationPickerGuide(
-                        chipText = stringResource(
-                            R.string.feature_ask_guide_chip,
-                            placeName,
-                            directionParticle(placeName),
-                        ),
-                        noteText = stringResource(R.string.feature_ask_guide_note),
-                    )
+                guide = when {
+                    uiState.coursePicking -> {
+                        val two = relationPicker.mode == RelationPickerMode.TWO
+                        RelationPickerGuide(
+                            chipText = stringResource(R.string.feature_course_picker_chip),
+                            noteText = stringResource(
+                                if (two) {
+                                    R.string.feature_course_picker_note_two
+                                } else {
+                                    R.string.feature_course_picker_note_group
+                                },
+                            ),
+                            titleText = stringResource(
+                                if (two) {
+                                    R.string.feature_course_picker_title_two
+                                } else {
+                                    R.string.feature_course_picker_title_group
+                                },
+                            ),
+                            chipIcon = ChagokIcons.Map,
+                        )
+                    }
+                    else -> uiState.guidePlaceName?.let { placeName ->
+                        RelationPickerGuide(
+                            chipText = stringResource(
+                                R.string.feature_ask_guide_chip,
+                                placeName,
+                                directionParticle(placeName),
+                            ),
+                            noteText = stringResource(R.string.feature_ask_guide_note),
+                        )
+                    }
                 },
             )
         }
@@ -233,16 +245,6 @@ private fun HomeContent(
             AskHomeDialog(stage = askStage, scopeRelation = askUiState.scopeRelation, actions = askActions)
         }
 
-        AnimatedVisibility(
-            visible = comingSoonToastVisible,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(24.dp),
-            enter = fadeIn(),
-            exit = fadeOut(),
-        ) {
-            ChagokToast(title = stringResource(R.string.feature_home_coming_soon_toast))
-        }
     }
 }
 
@@ -275,14 +277,14 @@ private fun RecordWidget(
     }
 }
 
-/** 위에 일기 보기·코스 짜기, 아래에 기억 물어보기. 코스 짜기는 지금은 누르면 준비 중 토스트만 띄운다. */
+/** 위에 일기 보기·코스 짜기, 아래에 기억 물어보기. */
 @Composable
 private fun FeatureWidgets(
     diarySummary: DiarySummaryUi?,
     compact: Boolean,
     onDiaryClick: () -> Unit,
     onAskClick: () -> Unit,
-    onComingSoonClick: () -> Unit,
+    onCourseClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val gap = if (compact) 12.dp else 16.dp
@@ -304,7 +306,7 @@ private fun FeatureWidgets(
             )
             CourseWidget(
                 compact = compact,
-                onClick = onComingSoonClick,
+                onClick = onCourseClick,
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight(),
@@ -427,7 +429,6 @@ private enum class HomeLayout {
     Narrow,
 }
 
-private const val COMING_SOON_TOAST_MILLIS = 2_000L
 
 private val NARROW_MAX_WIDTH = 600.dp
 private val COMPACT_MAX_WIDTH = 1000.dp
