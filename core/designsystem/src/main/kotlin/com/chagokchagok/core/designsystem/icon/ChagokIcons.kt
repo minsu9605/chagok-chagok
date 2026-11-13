@@ -154,6 +154,25 @@ object ChagokIcons {
     /** 도착지 깃발 */
     val Flag: ImageVector by lazy { strokeIcon("Flag", "M5 21V4", "M5 4h13l-3 4.5 3 4.5H5") }
 
+    /** 소리로 답하는 중 */
+    val Speaker: ImageVector by lazy {
+        strokeIcon("Speaker", "M11 5 6 9H2v6h4l5 4z", "M15.5 8.5a5 5 0 0 1 0 7", "M19 5a10 10 0 0 1 0 14")
+    }
+
+    /** 목적지 */
+    val Target: ImageVector by lazy {
+        strokeIcon(
+            "Target",
+            circle(cx = 12f, cy = 12f, radius = 9f),
+            circle(cx = 12f, cy = 12f, radius = 5f),
+            circle(cx = 12f, cy = 12f, radius = 1f),
+        )
+    }
+
+    val Search: ImageVector by lazy {
+        strokeIcon("Search", circle(cx = 11f, cy = 11f, radius = 7f), "m20 20-3.5-3.5")
+    }
+
     val Check: ImageVector by lazy { strokeIcon("Check", "M20 6 9 17l-5-5") }
 
     /** 주의 (동그라미 안 느낌표) */

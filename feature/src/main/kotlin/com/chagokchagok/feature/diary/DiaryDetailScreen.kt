@@ -48,10 +48,12 @@ import com.chagokchagok.core.designsystem.theme.ChagokTheme
 import com.chagokchagok.core.designsystem.theme.chagokShadow
 import com.chagokchagok.feature.R
 import com.chagokchagok.feature.common.RelationUi
+import com.chagokchagok.feature.common.objectParticle
 import com.chagokchagok.feature.common.palette
 import com.chagokchagok.feature.record.complete.RouteMap
 import com.chagokchagok.feature.record.memory.MemoDialog
 import com.chagokchagok.feature.record.relation.RelationPickerDialog
+import com.chagokchagok.feature.record.relation.RelationPickerGuide
 
 /**
  * 일기 상세 (화면 48~55). 왼쪽은 그날 동선 그림, 오른쪽은 장소 카드다.
@@ -150,7 +152,10 @@ fun DiaryDetailScreen(
                 onShowAllClick = {},
                 onBackToRecommendedClick = {},
                 onCloseClick = viewModel::onRestartPickerClose,
-                restart = true,
+                guide = RelationPickerGuide(
+                    chipText = stringResource(R.string.feature_diary_restart_chip),
+                    noteText = stringResource(R.string.feature_diary_restart_note),
+                ),
             )
         }
     }
@@ -639,13 +644,6 @@ internal fun visitLabel(number: Int, placeName: String, monthDayText: String): S
 private fun circledNumber(number: Int): String =
     if (number in 1..CIRCLED_COUNT) (CIRCLED_ONE + (number - 1)).toString() else number.toString()
 
-/** 이름 뒤에 붙일 "을" 또는 "를". 받침이 있으면 "을"이다. 한글로 끝나지 않으면 "를"로 둔다. */
-internal fun objectParticle(name: String): String {
-    val last = name.trim().lastOrNull() ?: return "를"
-    if (last !in HANGUL_FIRST..HANGUL_LAST) return "를"
-    return if ((last - HANGUL_FIRST) % HANGUL_FINAL_COUNT == 0) "를" else "을"
-}
-
 private val RATING_BUTTON_HEIGHT = 40.dp
 
 // 시안의 열 너비: 동선 그림 400, 나머지가 장소 카드
@@ -654,9 +652,6 @@ private const val LIST_WEIGHT = 796f
 
 private const val CIRCLED_ONE = '①'
 private const val CIRCLED_COUNT = 20
-private const val HANGUL_FIRST = '가'
-private const val HANGUL_LAST = '힣'
-private const val HANGUL_FINAL_COUNT = 28
 
 @Preview(name = "48 일기 상세 · 큰 창", widthDp = 841, heightDp = 605)
 @Composable

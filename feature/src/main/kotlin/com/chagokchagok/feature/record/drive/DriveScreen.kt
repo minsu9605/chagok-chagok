@@ -49,6 +49,11 @@ import com.chagokchagok.core.designsystem.icon.ChagokIcons
 import com.chagokchagok.core.designsystem.theme.ChagokTheme
 import com.chagokchagok.core.designsystem.theme.chagokShadow
 import com.chagokchagok.feature.R
+import com.chagokchagok.feature.ask.AskActions
+import com.chagokchagok.feature.ask.AskAnnouncement
+import com.chagokchagok.feature.ask.AskPanel
+import com.chagokchagok.feature.ask.AskStage
+import com.chagokchagok.feature.ask.AskViewModel
 import com.chagokchagok.feature.common.RelationUi
 import com.chagokchagok.feature.common.icon
 import com.chagokchagok.feature.common.palette
@@ -77,8 +82,16 @@ fun DriveScreen(
     modifier: Modifier = Modifier,
     guided: Boolean = false,
     viewModel: DriveViewModel = hiltViewModel(),
+    askViewModel: AskViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val askUiState by askViewModel.uiState.collectAsStateWithLifecycle()
+
+    // 답으로 나온 곳으로 안내를 고르면 내비 화면을 부른다. 장소에 좌표가 없어 목적지를 넣지는 못한다.
+    LaunchedEffect(askViewModel) {
+        askViewModel.guideRequests.collect { viewModel.onEnter() }
+    }
+    AskAnnouncement(stage = askUiState.stage, onAnswerShown = askViewModel::onAnswerShown)
 
     LaunchedEffect(Unit) { viewModel.onEnter() }
     LaunchedEffect(uiState.loaded, uiState.relation, uiState.endedSessionId) {
@@ -94,6 +107,16 @@ fun DriveScreen(
         justStarted = justStarted,
         autoStarted = autoStarted,
         guided = guided,
+        askStage = askUiState.stage,
+        askActions = AskActions(
+            onQuestionChange = askViewModel::onQuestionChange,
+            onQuestionSubmit = askViewModel::onQuestionSubmit,
+            onExampleClick = askViewModel::onExampleClick,
+            onFreshClick = askViewModel::onFreshClick,
+            onGuideClick = askViewModel::onGuideClick,
+            onClose = askViewModel::onClose,
+        ),
+        onVoiceClick = askViewModel::onOpen,
         onHomeClick = onHomeClick,
         onEndRecordClick = viewModel::onEndRecordClick,
         onDevArriveClick = viewModel::onDevArriveClick,
@@ -111,6 +134,9 @@ private fun DriveContent(
     onEndRecordClick: () -> Unit,
     modifier: Modifier = Modifier,
     guided: Boolean = false,
+    askStage: AskStage? = null,
+    askActions: AskActions = AskActions(),
+    onVoiceClick: () -> Unit = {},
     onDevArriveClick: () -> Unit = {},
     onDevRestartClick: () -> Unit = {},
 ) {
@@ -121,17 +147,6 @@ private fun DriveContent(
         if (startToastVisible) {
             delay(START_TOAST_MILLIS)
             startToastVisible = false
-        }
-    }
-
-    // 음성 질문은 아직 연결하지 않았다. 누를 때마다 1씩 올라가고, 값이 바뀌면 준비 중 토스트를 다시 띄운다.
-    var comingSoonClickCount by remember { mutableIntStateOf(0) }
-    var comingSoonToastVisible by remember { mutableStateOf(false) }
-    LaunchedEffect(comingSoonClickCount) {
-        if (comingSoonClickCount > 0) {
-            comingSoonToastVisible = true
-            delay(COMING_SOON_TOAST_MILLIS)
-            comingSoonToastVisible = false
         }
     }
 
@@ -154,15 +169,26 @@ private fun DriveContent(
                         .padding(start = 16.dp, top = 16.dp, bottom = 16.dp),
                 )
             }
-            MiniPanel(
-                relation = relation,
-                placeNames = uiState.placeNames,
-                pendingPlaceName = uiState.pendingPlaceName,
-                onVoiceClick = { comingSoonClickCount++ },
-                onHomeClick = onHomeClick,
-                onEndRecordClick = onEndRecordClick,
-                modifier = if (panelOnly) Modifier.fillMaxSize() else Modifier.width(PANEL_WIDTH).fillMaxHeight(),
-            )
+            val panelModifier = if (panelOnly) Modifier.fillMaxSize() else Modifier.width(PANEL_WIDTH).fillMaxHeight()
+            if (askStage != null) {
+                // 기억 물어보기는 미니 패널 자리를 차지한다 (화면 12~18).
+                AskPanel(
+                    stage = askStage,
+                    scopeRelation = relation,
+                    actions = askActions,
+                    modifier = panelModifier,
+                )
+            } else {
+                MiniPanel(
+                    relation = relation,
+                    placeNames = uiState.placeNames,
+                    pendingPlaceName = uiState.pendingPlaceName,
+                    onVoiceClick = onVoiceClick,
+                    onHomeClick = onHomeClick,
+                    onEndRecordClick = onEndRecordClick,
+                    modifier = panelModifier,
+                )
+            }
         }
 
         val toastModifier = Modifier
@@ -176,15 +202,6 @@ private fun DriveContent(
                 onClick = { startToastVisible = false },
                 modifier = toastModifier,
             )
-        } else {
-            AnimatedVisibility(
-                visible = comingSoonToastVisible,
-                modifier = toastModifier,
-                enter = fadeIn(),
-                exit = fadeOut(),
-            ) {
-                ChagokToast(title = stringResource(R.string.feature_home_coming_soon_toast))
-            }
         }
     }
 }
@@ -434,7 +451,6 @@ private fun VoiceAskButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
 }
 
 private const val START_TOAST_MILLIS = 4_000L
-private const val COMING_SOON_TOAST_MILLIS = 2_000L
 
 // 이 너비보다 좁으면 작은 창으로 보고 미니 패널만 보인다.
 private val PANEL_ONLY_MAX_WIDTH = 600.dp

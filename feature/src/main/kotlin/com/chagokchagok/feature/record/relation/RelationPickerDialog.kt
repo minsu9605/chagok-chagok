@@ -46,6 +46,17 @@ import com.chagokchagok.feature.record.home.RelationPickerMode
 import com.chagokchagok.feature.record.home.RelationPickerUi
 
 /**
+ * 갈 곳이 정해진 채로 관계를 물을 때 덧붙이는 안내 (화면 19-1, 55).
+ *
+ * @property chipText 맨 위 칩. 예: "지난 일기에서 다시 출발"
+ * @property noteText 아래 안내. 예: "새 기록은 오늘 날짜로 쌓이고, 지난 일기는 그대로예요."
+ */
+internal data class RelationPickerGuide(
+    val chipText: String,
+    val noteText: String,
+)
+
+/**
  * 관계 고르기 팝업 (화면 05 2인, 06 3인 이상, 07 다른 모드 직접 선택).
  * 화면 내용 위에 겹쳐 놓는다. 음성으로 답하는 안내는 2차라 넣지 않았다.
  */
@@ -57,7 +68,7 @@ internal fun RelationPickerDialog(
     onBackToRecommendedClick: () -> Unit,
     onCloseClick: () -> Unit,
     modifier: Modifier = Modifier,
-    restart: Boolean = false,
+    guide: RelationPickerGuide? = null,
 ) {
     val showAll = picker.mode == RelationPickerMode.ALL
 
@@ -75,7 +86,7 @@ internal fun RelationPickerDialog(
         } else {
             RecommendedRelationsContent(
                 picker = picker,
-                restart = restart,
+                guide = guide,
                 onRelationClick = onRelationClick,
                 onShowAllClick = onShowAllClick,
             )
@@ -87,19 +98,19 @@ internal fun RelationPickerDialog(
 @Composable
 private fun ColumnScope.RecommendedRelationsContent(
     picker: RelationPickerUi,
-    restart: Boolean,
+    guide: RelationPickerGuide?,
     onRelationClick: (RelationUi) -> Unit,
     onShowAllClick: () -> Unit,
 ) {
     val isTwo = picker.mode == RelationPickerMode.TWO
 
-    if (restart) {
+    if (guide != null) {
         Row(
             modifier = Modifier.align(Alignment.CenterHorizontally),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             ChagokChip(
-                text = stringResource(R.string.feature_diary_restart_chip),
+                text = guide.chipText,
                 colors = ChagokChipDefaults.mint(),
                 icon = ChagokIcons.Navigation,
                 height = 40.dp,
@@ -161,7 +172,7 @@ private fun ColumnScope.RecommendedRelationsContent(
             )
         }
     }
-    if (restart) {
+    if (guide != null) {
         Row(
             modifier = Modifier.align(Alignment.CenterHorizontally),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -174,7 +185,7 @@ private fun ColumnScope.RecommendedRelationsContent(
                 tint = ChagokTheme.colors.mintInk,
             )
             Text(
-                text = stringResource(R.string.feature_diary_restart_note),
+                text = guide.noteText,
                 style = ChagokTheme.typography.caption.copy(fontSize = 15.sp),
                 color = ChagokTheme.colors.inkSecondary,
             )

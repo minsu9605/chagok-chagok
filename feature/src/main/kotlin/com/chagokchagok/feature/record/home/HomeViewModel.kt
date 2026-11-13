@@ -37,14 +37,15 @@ class HomeViewModel @Inject constructor(
     /** 저장소에 없는, 이 화면만의 상태 (팝업과 토스트). */
     private data class LocalState(
         val relationPicker: RelationPickerUi? = null,
+        val guidePlaceName: String? = null,
     )
 
     private val localState = MutableStateFlow(LocalState())
 
-    private val _recordStarted = Channel<Boolean>(Channel.BUFFERED)
+    private val _recordStarted = Channel<RecordStart>(Channel.BUFFERED)
 
-    /** 기록을 시작했을 때 한 번 낸다. 값은 좌석 1명이라 묻지 않고 시작했는지 여부. */
-    val recordStarted: Flow<Boolean> = _recordStarted.receiveAsFlow()
+    /** 기록을 시작했을 때 한 번 낸다. */
+    val recordStarted: Flow<RecordStart> = _recordStarted.receiveAsFlow()
 
     private val _recordEnded = Channel<String>(Channel.BUFFERED)
 
@@ -73,6 +74,7 @@ class HomeViewModel @Inject constructor(
             ),
             recording = progress?.toUi(),
             relationPicker = local.relationPicker,
+            guidePlaceName = local.guidePlaceName,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -93,15 +95,33 @@ class HomeViewModel @Inject constructor(
     fun onStartRecordClick() {
         val seatCount = uiState.value.seatCount
         if (seatCount <= 1) {
-            startRecord(relation = RelationUi.SOLO, autoStarted = true)
+            startRecord(relation = RelationUi.SOLO, autoStarted = true, guided = false)
         } else {
             showRelationPicker(mode = recommendedMode(seatCount), seatCount = seatCount)
         }
     }
 
+    /**
+     * 기억 물어보기의 답에서 [여기로 길 안내]를 골랐을 때 (화면 19 → 19-1).
+     * 기록을 켜려면 관계가 필요해서 먼저 묻는다. 좌석 1명이면 묻지 않고 '나 혼자'로 시작한다.
+     */
+    fun onGuideRequest(placeName: String) {
+        val seatCount = uiState.value.seatCount
+        if (seatCount <= 1) {
+            startRecord(relation = RelationUi.SOLO, autoStarted = true, guided = true)
+        } else {
+            localState.update {
+                it.copy(
+                    relationPicker = RelationPickerUi(mode = recommendedMode(seatCount), seatCount = seatCount),
+                    guidePlaceName = placeName,
+                )
+            }
+        }
+    }
+
     /** 관계 타일을 눌렀을 때. 고른 관계는 기록이 끝날 때까지 바뀌지 않는다. */
     fun onRelationClick(relation: RelationUi) {
-        startRecord(relation = relation, autoStarted = false)
+        startRecord(relation = relation, autoStarted = false, guided = localState.value.guidePlaceName != null)
     }
 
     /** [다른 모드 직접 선택] */
@@ -126,19 +146,19 @@ class HomeViewModel @Inject constructor(
 
     /** 관계 팝업의 [✕] */
     fun onRelationPickerClose() {
-        localState.update { it.copy(relationPicker = null) }
+        localState.update { it.copy(relationPicker = null, guidePlaceName = null) }
     }
 
     private fun showRelationPicker(mode: RelationPickerMode, seatCount: Int) {
         localState.update { it.copy(relationPicker = RelationPickerUi(mode = mode, seatCount = seatCount)) }
     }
 
-    private fun startRecord(relation: RelationUi, autoStarted: Boolean) {
+    private fun startRecord(relation: RelationUi, autoStarted: Boolean, guided: Boolean) {
         val seatCount = uiState.value.seatCount
-        localState.update { it.copy(relationPicker = null) }
+        localState.update { it.copy(relationPicker = null, guidePlaceName = null) }
         viewModelScope.launch {
             recordEngine.start(relation = relation.toDomain(), occupantCount = seatCount)
-            _recordStarted.send(autoStarted)
+            _recordStarted.send(RecordStart(autoStarted = autoStarted, guided = guided))
         }
     }
 

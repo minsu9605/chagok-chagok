@@ -40,6 +40,13 @@ import com.chagokchagok.core.designsystem.icon.ChagokIcons
 import com.chagokchagok.core.designsystem.theme.ChagokTheme
 import com.chagokchagok.core.designsystem.theme.chagokShadow
 import com.chagokchagok.feature.R
+import com.chagokchagok.feature.ask.AskActions
+import com.chagokchagok.feature.ask.AskAnnouncement
+import com.chagokchagok.feature.ask.AskHomeDialog
+import com.chagokchagok.feature.ask.AskUiState
+import com.chagokchagok.feature.ask.AskViewModel
+import com.chagokchagok.feature.common.directionParticle
+import com.chagokchagok.feature.record.relation.RelationPickerGuide
 import com.chagokchagok.feature.common.RelationUi
 import com.chagokchagok.feature.common.icon
 import com.chagokchagok.feature.common.palette
@@ -48,23 +55,38 @@ import kotlinx.coroutines.delay
 
 /**
  * 메인 홈 (화면 02 기록 꺼짐, 10 기록 중).
- * 쌓기 위젯과 일기 보기가 동작한다. 코스 짜기·기억 물어보기는 누르면 "준비 중이에요" 토스트만 띄운다.
+ * 쌓기 위젯, 일기 보기, 기억 물어보기가 동작한다. 코스 짜기는 누르면 "준비 중이에요" 토스트만 띄운다.
  */
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
     onGoToNaviClick: () -> Unit = {},
     onRecordEnded: (sessionId: String) -> Unit = {},
-    onRecordStarted: (autoStarted: Boolean) -> Unit = {},
+    onRecordStarted: (autoStarted: Boolean, guided: Boolean) -> Unit = { _, _ -> },
     onDiaryClick: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel(),
+    askViewModel: AskViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val askUiState by askViewModel.uiState.collectAsStateWithLifecycle()
+    val currentOnGoToNaviClick by rememberUpdatedState(onGoToNaviClick)
+
+    // 답으로 나온 곳으로 길 안내를 고르면: 기록 중이면 주행 화면으로, 아니면 관계를 묻고 기록을 켠다.
+    LaunchedEffect(askViewModel) {
+        askViewModel.guideRequests.collect { placeName ->
+            if (viewModel.uiState.value.recording != null) {
+                currentOnGoToNaviClick()
+            } else {
+                viewModel.onGuideRequest(placeName)
+            }
+        }
+    }
+    AskAnnouncement(stage = askUiState.stage, onAnswerShown = askViewModel::onAnswerShown)
     val currentOnRecordStarted by rememberUpdatedState(onRecordStarted)
 
     // 기록을 시작하면 주행 화면으로 넘어간다. 시작 안내 토스트는 그 화면이 띄운다.
     LaunchedEffect(viewModel) {
-        viewModel.recordStarted.collect { autoStarted -> currentOnRecordStarted(autoStarted) }
+        viewModel.recordStarted.collect { start -> currentOnRecordStarted(start.autoStarted, start.guided) }
     }
     val currentOnRecordEnded by rememberUpdatedState(onRecordEnded)
     LaunchedEffect(viewModel) {
@@ -77,6 +99,7 @@ fun HomeScreen(
             onStartRecordClick = viewModel::onStartRecordClick,
             onGoToNaviClick = onGoToNaviClick,
             onDiaryClick = onDiaryClick,
+            onAskClick = askViewModel::onOpen,
             onEndRecordClick = viewModel::onEndRecordClick,
             onRelationClick = viewModel::onRelationClick,
             onShowAllRelationsClick = viewModel::onShowAllRelationsClick,
@@ -84,6 +107,15 @@ fun HomeScreen(
             onRelationPickerClose = viewModel::onRelationPickerClose,
         ),
         modifier = modifier,
+        askUiState = askUiState,
+        askActions = AskActions(
+            onQuestionChange = askViewModel::onQuestionChange,
+            onQuestionSubmit = askViewModel::onQuestionSubmit,
+            onExampleClick = askViewModel::onExampleClick,
+            onFreshClick = askViewModel::onFreshClick,
+            onGuideClick = askViewModel::onGuideClick,
+            onClose = askViewModel::onClose,
+        ),
     )
 }
 
@@ -92,6 +124,7 @@ private data class HomeActions(
     val onStartRecordClick: () -> Unit = {},
     val onGoToNaviClick: () -> Unit = {},
     val onDiaryClick: () -> Unit = {},
+    val onAskClick: () -> Unit = {},
     val onEndRecordClick: () -> Unit = {},
     val onRelationClick: (RelationUi) -> Unit = {},
     val onShowAllRelationsClick: () -> Unit = {},
@@ -104,6 +137,8 @@ private fun HomeContent(
     uiState: HomeUiState,
     actions: HomeActions,
     modifier: Modifier = Modifier,
+    askUiState: AskUiState = AskUiState(),
+    askActions: AskActions = AskActions(),
 ) {
     // 창을 어디에 얼마나 크게 띄울지는 시스템과 사용자가 정한다. 화면은 주어진 창 너비에 맞춰 배치를 고른다.
     BoxWithConstraints(
@@ -162,6 +197,7 @@ private fun HomeContent(
                         diarySummary = uiState.diarySummary,
                         compact = compact,
                         onDiaryClick = actions.onDiaryClick,
+                        onAskClick = actions.onAskClick,
                         onComingSoonClick = { comingSoonClickCount++ },
                         modifier = Modifier
                             .weight(OTHERS_WEIGHT)
@@ -179,7 +215,22 @@ private fun HomeContent(
                 onShowAllClick = actions.onShowAllRelationsClick,
                 onBackToRecommendedClick = actions.onBackToRecommendedClick,
                 onCloseClick = actions.onRelationPickerClose,
+                guide = uiState.guidePlaceName?.let { placeName ->
+                    RelationPickerGuide(
+                        chipText = stringResource(
+                            R.string.feature_ask_guide_chip,
+                            placeName,
+                            directionParticle(placeName),
+                        ),
+                        noteText = stringResource(R.string.feature_ask_guide_note),
+                    )
+                },
             )
+        }
+
+        val askStage = askUiState.stage
+        if (askStage != null) {
+            AskHomeDialog(stage = askStage, scopeRelation = askUiState.scopeRelation, actions = askActions)
         }
 
         AnimatedVisibility(
@@ -224,12 +275,13 @@ private fun RecordWidget(
     }
 }
 
-/** 위에 일기 보기·코스 짜기, 아래에 기억 물어보기. 코스 짜기와 기억 물어보기는 지금은 누르면 준비 중 토스트만 띄운다. */
+/** 위에 일기 보기·코스 짜기, 아래에 기억 물어보기. 코스 짜기는 지금은 누르면 준비 중 토스트만 띄운다. */
 @Composable
 private fun FeatureWidgets(
     diarySummary: DiarySummaryUi?,
     compact: Boolean,
     onDiaryClick: () -> Unit,
+    onAskClick: () -> Unit,
     onComingSoonClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -260,7 +312,7 @@ private fun FeatureWidgets(
         }
         AskWidget(
             compact = compact,
-            onClick = onComingSoonClick,
+            onClick = onAskClick,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(if (compact) 190.dp else 216.dp),

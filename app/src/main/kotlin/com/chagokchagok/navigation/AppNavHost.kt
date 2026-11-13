@@ -53,8 +53,10 @@ fun AppNavHost(
                 HomeScreen(
                     onRecordEnded = { sessionId -> showDiaryComplete(sessionId) },
                     onGoToNaviClick = { navController.navigate(DriveDestination()) { launchSingleTop = true } },
-                    onRecordStarted = { autoStarted ->
-                        showDrive(DriveDestination(justStarted = true, autoStarted = autoStarted))
+                    onRecordStarted = { autoStarted, guided ->
+                        showDrive(
+                            DriveDestination(justStarted = true, autoStarted = autoStarted, guided = guided),
+                        )
                     },
                     onDiaryClick = { navController.navigate(DiaryListDestination) { launchSingleTop = true } },
                 )

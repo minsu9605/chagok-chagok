@@ -12,6 +12,7 @@ import com.chagokchagok.feature.common.RelationUi
  * @property diarySummary 쌓인 일기와 핀의 수. 아직 모르면 null
  * @property recording 기록 중이면 그 상태, 아니면 null
  * @property relationPicker 관계 고르기 팝업이 떠 있으면 그 상태, 아니면 null (화면 05~07)
+ * @property guidePlaceName 길 안내할 곳이 정해진 채로 관계를 묻는 중이면 그 장소 이름, 아니면 null (화면 19-1)
  */
 data class HomeUiState(
     val dateText: String = "",
@@ -21,6 +22,18 @@ data class HomeUiState(
     val diarySummary: DiarySummaryUi? = null,
     val recording: RecordingUi? = null,
     val relationPicker: RelationPickerUi? = null,
+    val guidePlaceName: String? = null,
+)
+
+/**
+ * 기록을 시작했다는 알림.
+ *
+ * @property autoStarted 좌석 1명이라 묻지 않고 시작했으면 true
+ * @property guided 갈 곳이 정해진 채로 시작했으면 true
+ */
+data class RecordStart(
+    val autoStarted: Boolean,
+    val guided: Boolean,
 )
 
 /**
