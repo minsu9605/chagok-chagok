@@ -55,12 +55,17 @@ class HomeViewModel @Inject constructor(
         seatMonitor.occupantCount,
         recordEngine.progress,
         diaryRepository.observeLastDiary(),
-        diaryRepository.observeSummary(),
+        combine(
+            diaryRepository.observeSummary(),
+            diaryRepository.observeVisitCountOn(LocalDate.now()),
+            ::Pair,
+        ),
         localState,
-    ) { seatCount, progress, lastDiary, diarySummary, local ->
+    ) { seatCount, progress, lastDiary, (diarySummary, todayPlaceCount), local ->
         HomeUiState(
             dateText = LocalDate.now().format(TODAY_FORMATTER),
             seatCount = seatCount,
+            todayPlaceCount = todayPlaceCount,
             lastRecord = lastDiary?.toLastRecordUi(),
             diarySummary = DiarySummaryUi(
                 diaryCount = diarySummary.diaryCount,

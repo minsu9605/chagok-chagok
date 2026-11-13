@@ -3,6 +3,7 @@ package com.chagokchagok.core.domain.diary
 import com.chagokchagok.core.domain.model.Diary
 import com.chagokchagok.core.domain.model.DiarySummary
 import kotlinx.coroutines.flow.Flow
+import java.time.LocalDate
 
 /** 끝난 기록(일기)을 읽는다. */
 interface DiaryRepository {
@@ -11,6 +12,9 @@ interface DiaryRepository {
 
     /** 지금까지 쌓인 일기와 핀의 수. */
     fun observeSummary(): Flow<DiarySummary>
+
+    /** 그 날짜의 끝난 일기들에 저장된 방문 수. */
+    fun observeVisitCountOn(date: LocalDate): Flow<Int>
 
     /** 일기 1권. 없으면 null */
     suspend fun getDiary(sessionId: String): Diary?
