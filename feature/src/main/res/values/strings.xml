@@ -15,7 +15,6 @@
     <string name="feature_relation_with_family">가족과</string>
 
     <!-- 홈 (화면 02, 10) -->
-    <string name="feature_home_title">차곡차곡</string>
     <string name="feature_home_seat_detected">탑승 %1$d명 감지</string>
     <string name="feature_home_status_recording">%1$s 기록 중</string>
 
@@ -38,6 +37,7 @@
     <string name="feature_home_recording_footer">진행 중인 기록은 여기서만 보이고, 끝나면 일기장에 쌓여요</string>
 
     <string name="feature_home_diary_title">일기 보기</string>
+    <string name="feature_home_diary_summary">일기 %1$d권 · 핀 %2$d곳</string>
     <string name="feature_home_course_title">코스 짜기</string>
     <string name="feature_home_course_description">어디로 갈지 말하면\n내 기억으로 코스를 짜요</string>
     <string name="feature_home_course_chip_dessert">우리가 좋아했던 디저트 코스</string>
@@ -47,4 +47,22 @@
     <string name="feature_home_ask_example_cafe">“지난번에 갔던 치즈케이크 카페 어디였지?”</string>
     <string name="feature_home_ask_example_visited">“우리 여기 전에 왔었나?”</string>
     <string name="feature_home_coming_soon_toast">준비 중이에요</string>
+
+    <!-- 기록 시작 안내 토스트 (화면 08, 09) -->
+    <string name="feature_home_start_toast_title">%1$s의 차곡차곡 기록이 시작되었어요!</string>
+    <string name="feature_home_start_toast_title_solo">나 혼자 드라이브 모드로 차곡차곡 기록을 시작합니다!</string>
+    <string name="feature_home_start_toast_message">목적지를 설정해 출발해 보세요.</string>
+    <string name="feature_home_start_toast_message_auto">좌석 1명이라 묻지 않고 바로 시작했어요</string>
+
+    <!-- 관계 고르기 팝업 (화면 05~07) -->
+    <string name="feature_relation_picker_close">닫기</string>
+    <string name="feature_relation_picker_seat_detected">좌석 %1$d명 감지</string>
+    <string name="feature_relation_picker_title_two">오늘 두 분이 함께하시네요!\n누구와 함께하는 드라이브인가요?</string>
+    <string name="feature_relation_picker_title_group">여러 분이 함께 타셨네요!\n오늘 누구와 함께하는 나들이인가요?</string>
+    <string name="feature_relation_picker_tile_friends">친구들</string>
+    <string name="feature_relation_picker_show_all">다른 모드 직접 선택</string>
+    <string name="feature_relation_picker_back">추천으로 돌아가기</string>
+    <string name="feature_relation_picker_title_all">오늘은 누구와 함께인가요?</string>
+    <string name="feature_relation_picker_description_all">탑승 인원과 상관없이 직접 고를 수 있어요. 일행이 아직 안 탔을 때 쓰세요.</string>
+    <string name="feature_relation_picker_footer_all">고른 관계는 기록이 끝날 때까지 그대로예요</string>
 </resources>

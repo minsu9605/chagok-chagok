@@ -41,9 +41,15 @@ data class FakeLastRecord(
     val placeCount: Int,
 )
 
+/** [임시 가짜 구현] 지금까지 쌓인 일기와 핀의 수. core:domain 연결 후 삭제. */
+data class FakeDiarySummary(
+    val diaryCount: Int,
+    val pinCount: Int,
+)
+
 /**
  * [임시 가짜 구현] 기록 상태를 메모리에만 들고 있는 저장소. core:domain 연결 후 삭제.
- * 처음 값은 화면 설계 문서의 예시 데이터(좌석 2명, 지난 기록 10월 24일 가족과 2곳)이다.
+ * 처음 값은 좌석 2명에 쌓인 기록이 하나도 없는 상태(지난 기록 없음, 일기 0권)이다.
  */
 @Singleton
 class FakeRecordStore @Inject constructor() {
@@ -53,14 +59,34 @@ class FakeRecordStore @Inject constructor() {
     private val _activeSession = MutableStateFlow<FakeSession?>(null)
     val activeSession: StateFlow<FakeSession?> = _activeSession.asStateFlow()
 
-    private val _lastRecord = MutableStateFlow<FakeLastRecord?>(
-        FakeLastRecord(
-            date = LocalDate.of(2026, 10, 24),
-            relation = FakeRelation.FAMILY,
-            placeCount = 2,
-        ),
-    )
+    private val _lastRecord = MutableStateFlow<FakeLastRecord?>(null)
     val lastRecord: StateFlow<FakeLastRecord?> = _lastRecord.asStateFlow()
+
+    /** [임시 가짜 구현] 아직 쌓인 일기가 없는 상태. */
+    private val _diarySummary = MutableStateFlow(FakeDiarySummary(diaryCount = 0, pinCount = 0))
+    val diarySummary: StateFlow<FakeDiarySummary> = _diarySummary.asStateFlow()
+
+    /** [임시 가짜 구현] 고른 관계로 기록을 시작한다. 이미 기록 중이면 아무것도 하지 않는다. */
+    fun startSession(relation: FakeRelation) {
+        if (_activeSession.value != null) return
+        _activeSession.value = FakeSession(
+            relation = relation,
+            seatCount = _seatCount.value,
+            startedAt = LocalDateTime.now(),
+        )
+    }
+
+    /**
+     * [임시 가짜 구현] 탑승 인원을 1 → 2 → 3 → 1 순서로 바꾼다.
+     * 실제 좌석 감지(core:pleos)가 없어 인원별 화면을 확인하려고 둔 시험용 기능이다.
+     */
+    fun cycleSeatCount() {
+        _seatCount.value = if (_seatCount.value >= MAX_TEST_SEAT_COUNT) 1 else _seatCount.value + 1
+    }
+
+    private companion object {
+        const val MAX_TEST_SEAT_COUNT = 3
+    }
 }
 
 /** [임시 가짜 구현] 가짜 관계를 화면용 관계로 바꾼다. core:domain 연결 후 삭제. */
@@ -69,4 +95,12 @@ internal fun FakeRelation.toRelationUi(): RelationUi = when (this) {
     FakeRelation.COUPLE -> RelationUi.COUPLE
     FakeRelation.FRIEND -> RelationUi.FRIEND
     FakeRelation.FAMILY -> RelationUi.FAMILY
+}
+
+/** [임시 가짜 구현] 화면용 관계를 가짜 관계로 바꾼다. core:domain 연결 후 삭제. */
+internal fun RelationUi.toFakeRelation(): FakeRelation = when (this) {
+    RelationUi.SOLO -> FakeRelation.SOLO
+    RelationUi.COUPLE -> FakeRelation.COUPLE
+    RelationUi.FRIEND -> FakeRelation.FRIEND
+    RelationUi.FAMILY -> FakeRelation.FAMILY
 }
