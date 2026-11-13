@@ -19,7 +19,7 @@
 | `core:database` | Room 저장소 (기록, 장소, 방문) |
 | `core:pleos` | Pleos SDK·AAOS 차량 API 연동 (좌석, 내비, 음성 인식·출력, 주행 제한, 시동 신호) |
 | `core:designsystem` | 색·글꼴·부품 (글꼴: Asta Sans, `core/designsystem/licenses/AstaSans-OFL.txt`) |
-| `core:remote` | 외부 서비스 연동 (LLM, Kakao local api) |
+| `core:remote` | 외부 서비스 연동 (LLM, kakao local api) |
 
 ## 2. 실행 방법
 
