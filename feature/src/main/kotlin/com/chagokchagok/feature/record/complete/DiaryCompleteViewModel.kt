@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.Duration
+import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -82,6 +83,7 @@ class DiaryCompleteViewModel @Inject constructor(
         loaded = true,
         relation = session.relation.toUi(),
         dateText = session.sessionDate.format(DATE_FORMATTER),
+        pastDateText = session.sessionDate.takeIf { it != LocalDate.now() }?.format(MONTH_DAY_FORMATTER),
         visits = visits.map { saved ->
             CompleteVisitUi(
                 visitId = saved.visit.id,
@@ -97,6 +99,7 @@ class DiaryCompleteViewModel @Inject constructor(
     private companion object {
         const val MAX_MEMO_LENGTH = 100
         val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd", Locale.KOREAN)
+        val MONTH_DAY_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("M월 d일", Locale.KOREAN)
         val TIME_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm", Locale.KOREAN)
     }
 }

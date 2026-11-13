@@ -9,6 +9,7 @@ import com.chagokchagok.feature.record.memory.MemoryPromptUi
  * @property loaded 일기를 읽었으면 true
  * @property relation 그날의 관계. 일기를 찾지 못했으면 null
  * @property dateText 일기 날짜. 예: "2026.11.09"
+ * @property pastDateText 오늘 일기가 아니면 그 날짜. 예: "11월 9일". 오늘 일기면 null (제목이 "오늘"로 시작)
  * @property visits 다녀온 곳 (다녀온 순서)
  * @property memoEditing 한마디 추가 팝업이 떠 있으면 그 상태, 아니면 null (화면 30)
  */
@@ -16,6 +17,7 @@ data class DiaryCompleteUiState(
     val loaded: Boolean = false,
     val relation: RelationUi? = null,
     val dateText: String = "",
+    val pastDateText: String? = null,
     val visits: List<CompleteVisitUi> = emptyList(),
     val memoEditing: MemoryPromptUi.Memo? = null,
 )

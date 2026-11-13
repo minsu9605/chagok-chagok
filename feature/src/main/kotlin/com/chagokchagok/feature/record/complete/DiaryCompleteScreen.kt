@@ -145,6 +145,8 @@ private fun CompleteHeader(
     onCloseClick: () -> Unit,
 ) {
     val relation = uiState.relation
+    // 직접 끝낸 오늘 일기는 "오늘", 뒤늦게 마감된 지난 일기는 그 날짜로 시작한다.
+    val lead = uiState.pastDateText ?: stringResource(R.string.feature_complete_today)
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -171,8 +173,8 @@ private fun CompleteHeader(
             Text(
                 text = when (relation) {
                     null -> stringResource(R.string.feature_complete_title_missing)
-                    RelationUi.SOLO -> stringResource(R.string.feature_complete_title_solo)
-                    else -> stringResource(R.string.feature_complete_title, stringResource(relation.withLabelRes))
+                    RelationUi.SOLO -> stringResource(R.string.feature_complete_title_solo, lead)
+                    else -> stringResource(R.string.feature_complete_title, lead, stringResource(relation.withLabelRes))
                 },
                 style = ChagokTheme.typography.screenTitle.copy(
                     fontSize = if (compact) 21.sp else 28.sp,

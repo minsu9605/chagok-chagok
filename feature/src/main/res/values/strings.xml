@@ -108,8 +108,9 @@
     <string name="feature_memory_saved_closing">2초 뒤 닫혀요</string>
 
     <!-- 일기 완성 (화면 29) -->
-    <string name="feature_complete_title">오늘 %1$s 함께한 차곡차곡 일기가 완성되었어요!</string>
-    <string name="feature_complete_title_solo">오늘 나 혼자 다녀온 차곡차곡 일기가 완성되었어요!</string>
+    <string name="feature_complete_today">오늘</string>
+    <string name="feature_complete_title">%1$s %2$s 함께한 차곡차곡 일기가 완성되었어요!</string>
+    <string name="feature_complete_title_solo">%1$s 나 혼자 다녀온 차곡차곡 일기가 완성되었어요!</string>
     <string name="feature_complete_title_missing">일기를 찾지 못했어요</string>
     <string name="feature_complete_visit_count">총 %1$d곳 방문</string>
     <string name="feature_complete_close">확인 및 닫기</string>
