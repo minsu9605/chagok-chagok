@@ -46,6 +46,14 @@ interface RecordEngine {
     suspend fun discardPending(visitId: String)
 
     /**
+     * 끝내지 않은 기록이 마지막 갱신 뒤 3일 넘게 그대로면, 그때까지 저장된 방문으로 마감한다.
+     * 끝난 시각은 마지막 갱신 시각으로 적는다. 앱이 뜰 때 한 번 부른다.
+     *
+     * @return 마감한 기록의 id. 마감할 것이 없었으면 null
+     */
+    suspend fun closeStaleRecord(): String?
+
+    /**
      * 기록을 끝낸다. 평가 전 방문이 남아 있으면 지운다.
      *
      * @return 끝난 기록의 id. 기록 중이 아니었으면 null

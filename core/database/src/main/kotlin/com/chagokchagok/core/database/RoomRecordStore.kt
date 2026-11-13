@@ -141,6 +141,15 @@ class RoomRecordStore @Inject constructor(
             session.sessionId
         }
 
+    override suspend fun closeStaleRecord(): String? =
+        database.withTransaction {
+            val session = dao.getActiveSession() ?: return@withTransaction null
+            if (System.currentTimeMillis() - session.updatedAt < STALE_MILLIS) return@withTransaction null
+            dao.deletePendingVisits(session.sessionId)
+            dao.endSession(session.sessionId, SessionStatus.ENDED_AUTO_STALE.name, session.updatedAt)
+            session.sessionId
+        }
+
     override fun observeLastDiary(): Flow<Diary?> = dao.observeLastDiarySession().flatMapLatest { session ->
         if (session == null) {
             flowOf(null)
@@ -174,6 +183,11 @@ class RoomRecordStore @Inject constructor(
     )
 
     private fun newId(): String = UUID.randomUUID().toString()
+
+    private companion object {
+        /** 끝나지 않은 기록을 자동으로 마감하는 기준: 마지막 갱신 뒤 3일 (DB 설계 3장) */
+        const val STALE_MILLIS = 3L * 24 * 60 * 60 * 1000
+    }
 }
 
 private fun DriveSessionEntity.toDomain() = DriveSession(

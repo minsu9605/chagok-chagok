@@ -24,11 +24,14 @@ data class DriveSession(
 /** 함께 탄 사람과의 관계. */
 enum class Relation { SOLO, COUPLE, FRIENDS, FAMILY }
 
-/** 기록의 상태. 자동 종료(출발지 도착, 3일 경과)는 2차에서 더한다. */
+/** 기록의 상태. 출발지 도착 자동 종료는 내비 위치를 연결할 때 더한다. */
 enum class SessionStatus {
     /** 기록 중 */
     ACTIVE,
 
     /** [기록 종료]를 눌러 끝남 */
     ENDED_MANUAL,
+
+    /** 끝내지 않은 채 마지막 갱신 뒤 3일이 지나 자동으로 마감됨 */
+    ENDED_AUTO_STALE,
 }

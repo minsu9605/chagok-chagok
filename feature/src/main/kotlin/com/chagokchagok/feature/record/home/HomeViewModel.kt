@@ -30,7 +30,7 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val recordEngine: RecordEngine,
-    diaryRepository: DiaryRepository,
+    private val diaryRepository: DiaryRepository,
     seatMonitor: SeatMonitor,
 ) : ViewModel() {
 
@@ -48,7 +48,7 @@ class HomeViewModel @Inject constructor(
 
     private val _recordEnded = Channel<String>(Channel.BUFFERED)
 
-    /** [기록 종료]로 기록을 끝냈을 때 한 번 낸다. 값은 끝난 기록의 id. */
+    /** 기록이 끝났을 때(직접 종료, 3일 자동 마감) 한 번 낸다. 값은 끝난 기록의 id. */
     val recordEnded: Flow<String> = _recordEnded.receiveAsFlow()
 
     val uiState: StateFlow<HomeUiState> = combine(
@@ -79,6 +79,15 @@ class HomeViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
         initialValue = HomeUiState(),
     )
+
+    init {
+        // 3일 넘게 끝내지 않은 기록이 있으면 마감하고, 남긴 곳이 있으면 그 일기의 완성 화면을 보여 준다.
+        viewModelScope.launch {
+            val closedSessionId = recordEngine.closeStaleRecord() ?: return@launch
+            val hasVisits = diaryRepository.getDiary(closedSessionId)?.visits?.isNotEmpty() == true
+            if (hasVisits) _recordEnded.send(closedSessionId)
+        }
+    }
 
     /** [쌓기 시작]: 좌석 1명이면 묻지 않고 '나 혼자'로 시작하고, 2명 이상이면 관계를 묻는다. */
     fun onStartRecordClick() {
