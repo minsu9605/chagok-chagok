@@ -1,5 +1,6 @@
 package com.chagokchagok.feature.record.complete
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -221,12 +222,15 @@ private fun MetaText(text: String) {
 /**
  * 하루 동선 그림: 출발지에서 다녀온 순서대로 선을 잇는다.
  * 실제 지도와 실제 좌표가 아니다. 지도와 좌표를 붙이기 전까지 순서만 보여 주는 그림이다.
+ *
+ * @param labelRes 왼쪽 위 이름표의 문구. 순서 표시("→ ① → ②")가 들어갈 자리 하나를 가진다
  */
 @Composable
-private fun RouteMap(
+internal fun RouteMap(
     relation: RelationUi,
     placeNames: List<String>,
     modifier: Modifier = Modifier,
+    @StringRes labelRes: Int = R.string.feature_complete_route,
 ) {
     val lineColor = relation.palette.band
     val stops = placeNames.take(ROUTE_POSITIONS.size)
@@ -278,7 +282,7 @@ private fun RouteMap(
         }
         Text(
             text = stringResource(
-                R.string.feature_complete_route,
+                labelRes,
                 stops.indices.joinToString(separator = "") { " → ${CIRCLED_NUMBERS[it]}" },
             ),
             modifier = Modifier

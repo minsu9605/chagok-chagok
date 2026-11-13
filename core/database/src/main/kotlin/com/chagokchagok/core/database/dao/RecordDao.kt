@@ -52,6 +52,23 @@ interface RecordDao {
     )
     fun observeDiaryCount(): Flow<Int>
 
+    /** 끝난 일기 전체. 최근 것부터. 저장된 방문이 하나도 없는 일기는 건너뛴다. */
+    @Query(
+        """
+        SELECT s.* FROM drive_session s
+        WHERE s.status != 'ACTIVE'
+          AND EXISTS (SELECT 1 FROM visit v WHERE v.session_id = s.session_id AND v.status = 'SAVED')
+        ORDER BY s.session_date DESC, s.started_at DESC
+        """,
+    )
+    fun observeDiarySessions(): Flow<List<DriveSessionEntity>>
+
+    @Query("SELECT * FROM drive_session WHERE session_id = :sessionId AND status != 'ACTIVE'")
+    fun observeEndedSession(sessionId: String): Flow<DriveSessionEntity?>
+
+    @Query("DELETE FROM drive_session WHERE session_id = :sessionId AND status != 'ACTIVE'")
+    suspend fun deleteEndedSession(sessionId: String)
+
     // ── 장소 ─────────────────────────────────────────────────────────────
 
     @Insert
@@ -123,4 +140,32 @@ interface RecordDao {
         """,
     )
     fun observeSavedVisitCountOn(sessionDate: String): Flow<Int>
+
+    /** 끝난 일기들에 저장된 방문 전체. */
+    @Transaction
+    @Query(
+        """
+        SELECT v.* FROM visit v
+        JOIN drive_session s ON s.session_id = v.session_id
+        WHERE s.status != 'ACTIVE' AND v.status = 'SAVED'
+        ORDER BY v.seq, v.arrived_at
+        """,
+    )
+    fun observeDiaryVisits(): Flow<List<VisitWithPlaceEntity>>
+
+    @Query("SELECT * FROM visit WHERE visit_id = :visitId")
+    suspend fun getVisit(visitId: String): VisitEntity?
+
+    @Query("UPDATE visit SET rating = :rating, updated_at = :now WHERE visit_id = :visitId AND status = 'SAVED'")
+    suspend fun changeRating(visitId: String, rating: String, now: Long)
+
+    @Query("DELETE FROM visit WHERE visit_id = :visitId")
+    suspend fun deleteVisit(visitId: String)
+
+    @Query("DELETE FROM visit WHERE session_id = :sessionId")
+    suspend fun deleteVisits(sessionId: String)
+
+    /** 지운 방문 뒤의 순서를 하나씩 당긴다. */
+    @Query("UPDATE visit SET seq = seq - 1 WHERE session_id = :sessionId AND seq > :seq")
+    suspend fun pullSeqAfter(sessionId: String, seq: Int)
 }

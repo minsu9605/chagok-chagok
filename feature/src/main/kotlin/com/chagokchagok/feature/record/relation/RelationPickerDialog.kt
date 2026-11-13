@@ -57,6 +57,7 @@ internal fun RelationPickerDialog(
     onBackToRecommendedClick: () -> Unit,
     onCloseClick: () -> Unit,
     modifier: Modifier = Modifier,
+    restart: Boolean = false,
 ) {
     val showAll = picker.mode == RelationPickerMode.ALL
 
@@ -74,6 +75,7 @@ internal fun RelationPickerDialog(
         } else {
             RecommendedRelationsContent(
                 picker = picker,
+                restart = restart,
                 onRelationClick = onRelationClick,
                 onShowAllClick = onShowAllClick,
             )
@@ -85,18 +87,38 @@ internal fun RelationPickerDialog(
 @Composable
 private fun ColumnScope.RecommendedRelationsContent(
     picker: RelationPickerUi,
+    restart: Boolean,
     onRelationClick: (RelationUi) -> Unit,
     onShowAllClick: () -> Unit,
 ) {
     val isTwo = picker.mode == RelationPickerMode.TWO
 
-    ChagokChip(
-        text = stringResource(R.string.feature_relation_picker_seat_detected, picker.seatCount),
-        modifier = Modifier.align(Alignment.CenterHorizontally),
-        colors = ChagokChipDefaults.mint(),
-        icon = ChagokIcons.Users,
-        height = 44.dp,
-    )
+    if (restart) {
+        Row(
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            ChagokChip(
+                text = stringResource(R.string.feature_diary_restart_chip),
+                colors = ChagokChipDefaults.mint(),
+                icon = ChagokIcons.Navigation,
+                height = 40.dp,
+            )
+            ChagokChip(
+                text = stringResource(R.string.feature_relation_picker_seat_detected, picker.seatCount),
+                colors = ChagokChipDefaults.background(),
+                height = 40.dp,
+            )
+        }
+    } else {
+        ChagokChip(
+            text = stringResource(R.string.feature_relation_picker_seat_detected, picker.seatCount),
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            colors = ChagokChipDefaults.mint(),
+            icon = ChagokIcons.Users,
+            height = 44.dp,
+        )
+    }
     Text(
         text = stringResource(
             if (isTwo) R.string.feature_relation_picker_title_two else R.string.feature_relation_picker_title_group,
@@ -139,11 +161,31 @@ private fun ColumnScope.RecommendedRelationsContent(
             )
         }
     }
-    TextLink(
-        text = stringResource(R.string.feature_relation_picker_show_all),
-        onClick = onShowAllClick,
-        modifier = Modifier.align(Alignment.End),
-    )
+    if (restart) {
+        Row(
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = ChagokIcons.Info,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+                tint = ChagokTheme.colors.mintInk,
+            )
+            Text(
+                text = stringResource(R.string.feature_diary_restart_note),
+                style = ChagokTheme.typography.caption.copy(fontSize = 15.sp),
+                color = ChagokTheme.colors.inkSecondary,
+            )
+        }
+    } else {
+        TextLink(
+            text = stringResource(R.string.feature_relation_picker_show_all),
+            onClick = onShowAllClick,
+            modifier = Modifier.align(Alignment.End),
+        )
+    }
 }
 
 /** 화면 07: 관계 4개 모두. 창이 좁으면 2줄로 놓는다. */

@@ -63,6 +63,7 @@ import kotlinx.coroutines.delay
  *
  * @param justStarted 방금 기록을 시작해서 왔으면 true. 시작 안내 토스트를 띄운다 (화면 08, 09)
  * @param autoStarted 좌석 1명이라 묻지 않고 시작했으면 true
+ * @param guided 갈 곳이 정해진 채로 시작했으면 true (화면 08-1)
  * @param onRecordEnded [기록 종료]로 기록을 끝냈을 때. 끝난 기록의 id를 넘긴다
  * @param onNotRecording 기록 중이 아닌데 이 화면에 있을 때
  */
@@ -74,6 +75,7 @@ fun DriveScreen(
     onRecordEnded: (sessionId: String) -> Unit,
     onNotRecording: () -> Unit,
     modifier: Modifier = Modifier,
+    guided: Boolean = false,
     viewModel: DriveViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -91,6 +93,7 @@ fun DriveScreen(
         uiState = uiState,
         justStarted = justStarted,
         autoStarted = autoStarted,
+        guided = guided,
         onHomeClick = onHomeClick,
         onEndRecordClick = viewModel::onEndRecordClick,
         onDevArriveClick = viewModel::onDevArriveClick,
@@ -107,6 +110,7 @@ private fun DriveContent(
     onHomeClick: () -> Unit,
     onEndRecordClick: () -> Unit,
     modifier: Modifier = Modifier,
+    guided: Boolean = false,
     onDevArriveClick: () -> Unit = {},
     onDevRestartClick: () -> Unit = {},
 ) {
@@ -168,6 +172,7 @@ private fun DriveContent(
             StartRecordToast(
                 relation = relation,
                 autoStarted = autoStarted,
+                guided = guided,
                 onClick = { startToastVisible = false },
                 modifier = toastModifier,
             )

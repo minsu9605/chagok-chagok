@@ -216,6 +216,7 @@ internal fun MemoDialog(
     onSaveClick: () -> Unit,
     onLaterClick: () -> Unit,
     modifier: Modifier = Modifier,
+    hint: String = stringResource(R.string.feature_memory_memo_auto_save_hint),
 ) {
     val circle = ChagokTheme.shapes.pill
 
@@ -327,7 +328,7 @@ internal fun MemoDialog(
                 tint = ChagokTheme.colors.mintInk,
             )
             Text(
-                text = stringResource(R.string.feature_memory_memo_auto_save_hint),
+                text = hint,
                 style = ChagokTheme.typography.label.copy(fontWeight = FontWeight.SemiBold),
                 color = ChagokTheme.colors.inkSecondary,
             )

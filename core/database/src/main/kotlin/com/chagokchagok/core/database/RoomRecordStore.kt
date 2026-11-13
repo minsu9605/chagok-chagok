@@ -172,6 +172,48 @@ class RoomRecordStore @Inject constructor(
 
     override suspend fun saveDiaryMemo(visitId: String, text: String) = saveMemo(visitId, text)
 
+    override fun observeDiaries(): Flow<List<Diary>> =
+        combine(dao.observeDiarySessions(), dao.observeDiaryVisits()) { sessions, visits ->
+            val visitsBySession = visits.groupBy { it.visit.sessionId }
+            sessions.map { session -> diaryOf(session, visitsBySession[session.sessionId].orEmpty()) }
+        }
+
+    override fun observeDiary(sessionId: String): Flow<Diary?> =
+        dao.observeEndedSession(sessionId).flatMapLatest { session ->
+            if (session == null) {
+                flowOf(null)
+            } else {
+                dao.observeVisits(sessionId).map { visits -> diaryOf(session, visits) }
+            }
+        }
+
+    override suspend fun changeRating(visitId: String, rating: Rating) {
+        dao.changeRating(visitId, rating.name, System.currentTimeMillis())
+    }
+
+    override suspend fun deleteVisit(visitId: String) {
+        database.withTransaction {
+            val visit = dao.getVisit(visitId) ?: return@withTransaction
+            val session = dao.getSession(visit.sessionId) ?: return@withTransaction
+            // 진행 중인 기록은 여기서 고치지 않는다.
+            if (session.status == SessionStatus.ACTIVE.name) return@withTransaction
+            dao.deleteVisit(visitId)
+            dao.pullSeqAfter(visit.sessionId, visit.seq)
+            if (dao.countSavedVisits(visit.sessionId) == 0) deleteDiaryRows(visit.sessionId)
+        }
+    }
+
+    override suspend fun deleteDiary(sessionId: String) {
+        database.withTransaction { deleteDiaryRows(sessionId) }
+    }
+
+    private suspend fun deleteDiaryRows(sessionId: String) {
+        val session = dao.getSession(sessionId) ?: return
+        if (session.status == SessionStatus.ACTIVE.name) return
+        dao.deleteVisits(sessionId)
+        dao.deleteEndedSession(sessionId)
+    }
+
     private suspend fun touchSessionOf(visitId: String, now: Long) {
         val sessionId = dao.getSessionIdOfVisit(visitId) ?: return
         dao.touchSession(sessionId, now)

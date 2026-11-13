@@ -48,7 +48,7 @@ import kotlinx.coroutines.delay
 
 /**
  * 메인 홈 (화면 02 기록 꺼짐, 10 기록 중).
- * 1차에서는 쌓기 위젯만 동작한다. 일기 보기·코스 짜기·기억 물어보기는 누르면 "준비 중이에요" 토스트만 띄운다.
+ * 쌓기 위젯과 일기 보기가 동작한다. 코스 짜기·기억 물어보기는 누르면 "준비 중이에요" 토스트만 띄운다.
  */
 @Composable
 fun HomeScreen(
@@ -56,6 +56,7 @@ fun HomeScreen(
     onGoToNaviClick: () -> Unit = {},
     onRecordEnded: (sessionId: String) -> Unit = {},
     onRecordStarted: (autoStarted: Boolean) -> Unit = {},
+    onDiaryClick: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -75,6 +76,7 @@ fun HomeScreen(
         actions = HomeActions(
             onStartRecordClick = viewModel::onStartRecordClick,
             onGoToNaviClick = onGoToNaviClick,
+            onDiaryClick = onDiaryClick,
             onEndRecordClick = viewModel::onEndRecordClick,
             onRelationClick = viewModel::onRelationClick,
             onShowAllRelationsClick = viewModel::onShowAllRelationsClick,
@@ -89,6 +91,7 @@ fun HomeScreen(
 private data class HomeActions(
     val onStartRecordClick: () -> Unit = {},
     val onGoToNaviClick: () -> Unit = {},
+    val onDiaryClick: () -> Unit = {},
     val onEndRecordClick: () -> Unit = {},
     val onRelationClick: (RelationUi) -> Unit = {},
     val onShowAllRelationsClick: () -> Unit = {},
@@ -158,6 +161,7 @@ private fun HomeContent(
                     FeatureWidgets(
                         diarySummary = uiState.diarySummary,
                         compact = compact,
+                        onDiaryClick = actions.onDiaryClick,
                         onComingSoonClick = { comingSoonClickCount++ },
                         modifier = Modifier
                             .weight(OTHERS_WEIGHT)
@@ -220,11 +224,12 @@ private fun RecordWidget(
     }
 }
 
-/** 위에 일기 보기·코스 짜기, 아래에 기억 물어보기. 2차에서 만들 기능이라 지금은 누르면 준비 중 토스트만 띄운다. */
+/** 위에 일기 보기·코스 짜기, 아래에 기억 물어보기. 코스 짜기와 기억 물어보기는 지금은 누르면 준비 중 토스트만 띄운다. */
 @Composable
 private fun FeatureWidgets(
     diarySummary: DiarySummaryUi?,
     compact: Boolean,
+    onDiaryClick: () -> Unit,
     onComingSoonClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -240,7 +245,7 @@ private fun FeatureWidgets(
         ) {
             DiaryWidget(
                 summary = diarySummary,
-                onClick = onComingSoonClick,
+                onClick = onDiaryClick,
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight(),

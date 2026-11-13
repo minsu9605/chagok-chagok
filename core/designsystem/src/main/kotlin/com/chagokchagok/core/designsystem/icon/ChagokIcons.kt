@@ -111,6 +111,49 @@ object ChagokIcons {
         )
     }
 
+    val ChevronDown: ImageVector by lazy { strokeIcon("ChevronDown", "m6 9 6 6 6-6") }
+
+    /** 삭제 */
+    val Trash: ImageVector by lazy {
+        strokeIcon("Trash", "M3 6h18", "M8 6V4h8v2", "M19 6l-1 14H6L5 6")
+    }
+
+    /** 다시 말하기 */
+    val Refresh: ImageVector by lazy {
+        strokeIcon(
+            "Refresh",
+            "M3 12a9 9 0 0 1 15.5-6.2L21 8",
+            "M21 3v5h-5",
+            "M21 12a9 9 0 0 1-15.5 6.2L3 16",
+            "M3 21v-5h5",
+        )
+    }
+
+    /** 안내 (동그라미 안 i) */
+    val Info: ImageVector by lazy {
+        strokeIcon(
+            "Info",
+            circle(cx = 12f, cy = 12f, radius = 9f),
+            "M12 11v5",
+            "M12 8h.01",
+        )
+    }
+
+    /** 인터넷 연결 없음 */
+    val WifiOff: ImageVector by lazy {
+        strokeIcon(
+            "WifiOff",
+            "M2 2l20 20",
+            "M8.5 16.5a5 5 0 0 1 7 0",
+            "M2 8.8a15 15 0 0 1 4.2-2.6",
+            "M22 8.8a15 15 0 0 0-10-3.8",
+            "M12 20h.01",
+        )
+    }
+
+    /** 도착지 깃발 */
+    val Flag: ImageVector by lazy { strokeIcon("Flag", "M5 21V4", "M5 4h13l-3 4.5 3 4.5H5") }
+
     val Check: ImageVector by lazy { strokeIcon("Check", "M20 6 9 17l-5-5") }
 
     /** 주의 (동그라미 안 느낌표) */

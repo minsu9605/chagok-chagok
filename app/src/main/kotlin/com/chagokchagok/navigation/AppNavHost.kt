@@ -9,7 +9,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import com.chagokchagok.feature.diary.DiaryDetailScreen
+import com.chagokchagok.feature.diary.DiaryListScreen
 import com.chagokchagok.feature.navigation.DiaryCompleteDestination
+import com.chagokchagok.feature.navigation.DiaryDetailDestination
+import com.chagokchagok.feature.navigation.DiaryListDestination
 import com.chagokchagok.feature.navigation.DriveDestination
 import com.chagokchagok.feature.navigation.HomeDestination
 import com.chagokchagok.feature.record.complete.DiaryCompleteScreen
@@ -31,6 +35,14 @@ fun AppNavHost(
         }
     }
 
+    // 기록을 시작하면 주행 화면으로 간다. 주행 화면에서 나오면 홈이 보이도록 홈만 남긴다.
+    val showDrive: (DriveDestination) -> Unit = { destination ->
+        navController.navigate(destination) {
+            popUpTo<HomeDestination>()
+            launchSingleTop = true
+        }
+    }
+
     Box(modifier = modifier.fillMaxSize()) {
         NavHost(
             navController = navController,
@@ -42,10 +54,9 @@ fun AppNavHost(
                     onRecordEnded = { sessionId -> showDiaryComplete(sessionId) },
                     onGoToNaviClick = { navController.navigate(DriveDestination()) { launchSingleTop = true } },
                     onRecordStarted = { autoStarted ->
-                        navController.navigate(DriveDestination(justStarted = true, autoStarted = autoStarted)) {
-                            launchSingleTop = true
-                        }
+                        showDrive(DriveDestination(justStarted = true, autoStarted = autoStarted))
                     },
+                    onDiaryClick = { navController.navigate(DiaryListDestination) { launchSingleTop = true } },
                 )
             }
             composable<DriveDestination> { backStackEntry ->
@@ -54,6 +65,7 @@ fun AppNavHost(
                 DriveScreen(
                     justStarted = destination.justStarted,
                     autoStarted = destination.autoStarted,
+                    guided = destination.guided,
                     onHomeClick = { backToHome() },
                     onRecordEnded = { sessionId -> showDiaryComplete(sessionId) },
                     onNotRecording = { backToHome() },
@@ -62,6 +74,28 @@ fun AppNavHost(
             composable<DiaryCompleteDestination> {
                 DiaryCompleteScreen(
                     onCloseClick = { navController.popBackStack(route = HomeDestination, inclusive = false) },
+                )
+            }
+            composable<DiaryListDestination> {
+                DiaryListScreen(
+                    onHomeClick = { navController.popBackStack(route = HomeDestination, inclusive = false) },
+                    onDiaryClick = { sessionId ->
+                        navController.navigate(DiaryDetailDestination(sessionId)) { launchSingleTop = true }
+                    },
+                    onRecordStarted = { autoStarted ->
+                        showDrive(DriveDestination(justStarted = true, autoStarted = autoStarted))
+                    },
+                )
+            }
+            composable<DiaryDetailDestination> {
+                DiaryDetailScreen(
+                    onBackClick = { navController.popBackStack(route = DiaryListDestination, inclusive = false) },
+                    onDeparted = { newRecord, autoStarted ->
+                        // 갈 곳이 정해진 채 시작한다. 하던 기록에 이어서 쌓을 때는 시작 안내를 띄우지 않는다.
+                        showDrive(
+                            DriveDestination(justStarted = newRecord, autoStarted = autoStarted, guided = newRecord),
+                        )
+                    },
                 )
             }
         }
