@@ -65,4 +65,15 @@
     <string name="feature_relation_picker_title_all">오늘은 누구와 함께인가요?</string>
     <string name="feature_relation_picker_description_all">탑승 인원과 상관없이 직접 고를 수 있어요. 일행이 아직 안 탔을 때 쓰세요.</string>
     <string name="feature_relation_picker_footer_all">고른 관계는 기록이 끝날 때까지 그대로예요</string>
+
+    <!-- 주행 중 화면 (화면 11) -->
+    <string name="feature_drive_recording">차곡차곡 기록 중</string>
+    <string name="feature_drive_today_empty">아직 없어요 · 목적지를 정해 출발해요</string>
+    <string name="feature_drive_today_one">1곳 · %1$s</string>
+    <string name="feature_drive_today_many">%1$d곳 · %2$s 외 %3$d곳</string>
+    <string name="feature_drive_voice_ask">음성 질문하기</string>
+    <string name="feature_drive_voice_ask_hint">“글레오야”라고 불러도 돼요</string>
+    <string name="feature_drive_go_home">앱 홈 화면</string>
+    <string name="feature_drive_navi_placeholder_title">내비 화면 자리</string>
+    <string name="feature_drive_navi_placeholder_message">순정 내비가 연결되면\n이 자리에 길 안내가 보여요</string>
 </resources>

@@ -23,6 +23,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,9 +55,16 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     onGoToNaviClick: () -> Unit = {},
     onEndRecordClick: () -> Unit = {},
+    onRecordStarted: (autoStarted: Boolean) -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val currentOnRecordStarted by rememberUpdatedState(onRecordStarted)
+
+    // 기록을 시작하면 주행 화면으로 넘어간다. 시작 안내 토스트는 그 화면이 띄운다.
+    LaunchedEffect(viewModel) {
+        viewModel.recordStarted.collect { autoStarted -> currentOnRecordStarted(autoStarted) }
+    }
 
     HomeContent(
         uiState = uiState,
@@ -68,7 +76,6 @@ fun HomeScreen(
             onShowAllRelationsClick = viewModel::onShowAllRelationsClick,
             onBackToRecommendedClick = viewModel::onBackToRecommendedClick,
             onRelationPickerClose = viewModel::onRelationPickerClose,
-            onStartToastClick = viewModel::onStartToastClick,
         ),
         modifier = modifier,
     )
@@ -83,7 +90,6 @@ private data class HomeActions(
     val onShowAllRelationsClick: () -> Unit = {},
     val onBackToRecommendedClick: () -> Unit = {},
     val onRelationPickerClose: () -> Unit = {},
-    val onStartToastClick: () -> Unit = {},
 )
 
 @Composable
@@ -168,59 +174,17 @@ private fun HomeContent(
             )
         }
 
-        // 토스트 자리는 하나다. 기록 시작 안내가 떠 있으면 그것을 먼저 보인다.
-        val startToast = uiState.startToast
-        val toastModifier = Modifier
-            .align(Alignment.BottomCenter)
-            .padding(24.dp)
-        if (startToast != null) {
-            StartRecordToast(
-                toast = startToast,
-                onClick = actions.onStartToastClick,
-                modifier = toastModifier,
-            )
-        } else {
-            AnimatedVisibility(
-                visible = comingSoonToastVisible,
-                modifier = toastModifier,
-                enter = fadeIn(),
-                exit = fadeOut(),
-            ) {
-                ChagokToast(title = stringResource(R.string.feature_home_coming_soon_toast))
-            }
+        AnimatedVisibility(
+            visible = comingSoonToastVisible,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(24.dp),
+            enter = fadeIn(),
+            exit = fadeOut(),
+        ) {
+            ChagokToast(title = stringResource(R.string.feature_home_coming_soon_toast))
         }
     }
-}
-
-/** 기록 시작 안내 토스트 (화면 08, 09). 관계 아이콘과 색으로 보여 준다. */
-@Composable
-private fun StartRecordToast(
-    toast: StartToastUi,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val relation = toast.relation
-    val isSolo = relation == RelationUi.SOLO
-
-    ChagokToast(
-        title = if (isSolo) {
-            stringResource(R.string.feature_home_start_toast_title_solo)
-        } else {
-            stringResource(R.string.feature_home_start_toast_title, stringResource(relation.withLabelRes))
-        },
-        modifier = modifier,
-        message = stringResource(
-            if (toast.autoStarted) {
-                R.string.feature_home_start_toast_message_auto
-            } else {
-                R.string.feature_home_start_toast_message
-            },
-        ),
-        icon = relation.icon,
-        iconContainerColor = relation.palette.soft,
-        iconColor = relation.palette.ink,
-        onClick = onClick,
-    )
 }
 
 @Composable
@@ -461,12 +425,3 @@ private fun HomeIdleNarrowPreview() = HomePreview(PreviewIdleState)
 @Preview(name = "10 홈 · 기록 중 · 작은 창", widthDp = 426, heightDp = 605)
 @Composable
 private fun HomeRecordingNarrowPreview() = HomePreview(PreviewRecordingState)
-
-@Preview(name = "08 기록 시작 안내 · 큰 창", widthDp = 841, heightDp = 605)
-@Composable
-private fun HomeStartToastPreview() = HomePreview(
-    PreviewRecordingState.copy(
-        recording = PreviewRecordingState.recording?.copy(placeNames = emptyList()),
-        startToast = StartToastUi(relation = RelationUi.COUPLE, autoStarted = false),
-    ),
-)

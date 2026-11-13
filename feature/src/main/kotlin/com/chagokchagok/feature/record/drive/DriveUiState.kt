@@ -1,0 +1,16 @@
+package com.chagokchagok.feature.record.drive
+
+import com.chagokchagok.feature.common.RelationUi
+
+/**
+ * 주행 중 화면이 그리는 값 (화면 11).
+ *
+ * @property loaded 기록 상태를 한 번이라도 읽었으면 true
+ * @property relation 진행 중인 기록의 관계. 기록 중이 아니면 null
+ * @property placeNames 오늘 다녀온 곳 이름 (다녀온 순서)
+ */
+data class DriveUiState(
+    val loaded: Boolean = false,
+    val relation: RelationUi? = null,
+    val placeNames: List<String> = emptyList(),
+)

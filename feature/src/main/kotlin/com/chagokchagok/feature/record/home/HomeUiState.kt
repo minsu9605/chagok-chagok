@@ -12,7 +12,6 @@ import com.chagokchagok.feature.common.RelationUi
  * @property diarySummary 쌓인 일기와 핀의 수. 아직 모르면 null
  * @property recording 기록 중이면 그 상태, 아니면 null
  * @property relationPicker 관계 고르기 팝업이 떠 있으면 그 상태, 아니면 null (화면 05~07)
- * @property startToast 기록 시작 안내 토스트가 떠 있으면 그 상태, 아니면 null (화면 08, 09)
  */
 data class HomeUiState(
     val dateText: String = "",
@@ -22,7 +21,6 @@ data class HomeUiState(
     val diarySummary: DiarySummaryUi? = null,
     val recording: RecordingUi? = null,
     val relationPicker: RelationPickerUi? = null,
-    val startToast: StartToastUi? = null,
 )
 
 /**
@@ -75,14 +73,4 @@ enum class RelationPickerMode {
 data class RelationPickerUi(
     val mode: RelationPickerMode,
     val seatCount: Int,
-)
-
-/**
- * 기록 시작 안내 토스트.
- *
- * @property autoStarted 좌석 1명이라 묻지 않고 바로 시작했으면 true (화면 09)
- */
-data class StartToastUi(
-    val relation: RelationUi,
-    val autoStarted: Boolean,
 )

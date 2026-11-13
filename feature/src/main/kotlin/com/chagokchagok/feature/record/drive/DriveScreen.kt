@@ -1,0 +1,426 @@
+package com.chagokchagok.feature.record.drive
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.chagokchagok.core.designsystem.component.ChagokButton
+import com.chagokchagok.core.designsystem.component.ChagokButtonStyle
+import com.chagokchagok.core.designsystem.component.ChagokChip
+import com.chagokchagok.core.designsystem.component.ChagokChipDefaults
+import com.chagokchagok.core.designsystem.component.ChagokToast
+import com.chagokchagok.core.designsystem.component.ChagokWidgetCard
+import com.chagokchagok.core.designsystem.icon.ChagokIcons
+import com.chagokchagok.core.designsystem.theme.ChagokTheme
+import com.chagokchagok.core.designsystem.theme.chagokShadow
+import com.chagokchagok.feature.R
+import com.chagokchagok.feature.common.RelationUi
+import com.chagokchagok.feature.common.icon
+import com.chagokchagok.feature.common.palette
+import kotlinx.coroutines.delay
+
+/**
+ * 주행 중 화면 (화면 11).
+ *
+ * 시안은 순정 내비가 큰 창, 이 앱의 미니 패널이 작은 창에 뜨는 모습이다.
+ * 창 배치는 앱이 정할 수 없으므로, 창이 넓으면 왼쪽에 내비 자리를 비워 두고 오른쪽에 미니 패널을 놓는다.
+ * 창이 좁으면(작은 창) 미니 패널만 보인다.
+ *
+ * @param justStarted 방금 기록을 시작해서 왔으면 true. 시작 안내 토스트를 띄운다 (화면 08, 09)
+ * @param autoStarted 좌석 1명이라 묻지 않고 시작했으면 true
+ * @param onNotRecording 기록 중이 아닌데 이 화면에 있을 때 (기록이 끝났을 때)
+ */
+@Composable
+fun DriveScreen(
+    justStarted: Boolean,
+    autoStarted: Boolean,
+    onHomeClick: () -> Unit,
+    onEndRecordClick: () -> Unit,
+    onNotRecording: () -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: DriveViewModel = hiltViewModel(),
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) { viewModel.onEnter() }
+    LaunchedEffect(uiState.loaded, uiState.relation) {
+        if (uiState.loaded && uiState.relation == null) onNotRecording()
+    }
+
+    DriveContent(
+        uiState = uiState,
+        justStarted = justStarted,
+        autoStarted = autoStarted,
+        onHomeClick = onHomeClick,
+        onEndRecordClick = onEndRecordClick,
+        modifier = modifier,
+    )
+}
+
+@Composable
+private fun DriveContent(
+    uiState: DriveUiState,
+    justStarted: Boolean,
+    autoStarted: Boolean,
+    onHomeClick: () -> Unit,
+    onEndRecordClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val relation = uiState.relation ?: return
+
+    var startToastVisible by rememberSaveable { mutableStateOf(justStarted) }
+    LaunchedEffect(Unit) {
+        if (startToastVisible) {
+            delay(START_TOAST_MILLIS)
+            startToastVisible = false
+        }
+    }
+
+    // 음성 질문은 아직 연결하지 않았다. 누를 때마다 1씩 올라가고, 값이 바뀌면 준비 중 토스트를 다시 띄운다.
+    var comingSoonClickCount by remember { mutableIntStateOf(0) }
+    var comingSoonToastVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(comingSoonClickCount) {
+        if (comingSoonClickCount > 0) {
+            comingSoonToastVisible = true
+            delay(COMING_SOON_TOAST_MILLIS)
+            comingSoonToastVisible = false
+        }
+    }
+
+    BoxWithConstraints(
+        modifier = modifier
+            .fillMaxSize()
+            .background(ChagokTheme.colors.background),
+    ) {
+        val panelOnly = maxWidth < PANEL_ONLY_MAX_WIDTH
+
+        Row(modifier = Modifier.fillMaxSize()) {
+            if (!panelOnly) {
+                NaviPlaceholder(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .padding(start = 16.dp, top = 16.dp, bottom = 16.dp),
+                )
+            }
+            MiniPanel(
+                relation = relation,
+                placeNames = uiState.placeNames,
+                onVoiceClick = { comingSoonClickCount++ },
+                onHomeClick = onHomeClick,
+                onEndRecordClick = onEndRecordClick,
+                modifier = if (panelOnly) Modifier.fillMaxSize() else Modifier.width(PANEL_WIDTH).fillMaxHeight(),
+            )
+        }
+
+        val toastModifier = Modifier
+            .align(Alignment.BottomCenter)
+            .padding(24.dp)
+        if (startToastVisible) {
+            StartRecordToast(
+                relation = relation,
+                autoStarted = autoStarted,
+                onClick = { startToastVisible = false },
+                modifier = toastModifier,
+            )
+        } else {
+            AnimatedVisibility(
+                visible = comingSoonToastVisible,
+                modifier = toastModifier,
+                enter = fadeIn(),
+                exit = fadeOut(),
+            ) {
+                ChagokToast(title = stringResource(R.string.feature_home_coming_soon_toast))
+            }
+        }
+    }
+}
+
+/** 순정 내비가 뜰 자리. 이 앱은 지도를 그리지 않는다. */
+@Composable
+private fun NaviPlaceholder(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier.background(ChagokTheme.colors.fill, RoundedCornerShape(20.dp)),
+        verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Icon(
+            imageVector = ChagokIcons.Navigation,
+            contentDescription = null,
+            modifier = Modifier.size(40.dp),
+            tint = ChagokTheme.colors.inkSecondary,
+        )
+        Text(
+            text = stringResource(R.string.feature_drive_navi_placeholder_title),
+            style = ChagokTheme.typography.cardTitle.copy(fontSize = 22.sp),
+            color = ChagokTheme.colors.ink,
+        )
+        Text(
+            text = stringResource(R.string.feature_drive_navi_placeholder_message),
+            style = ChagokTheme.typography.caption,
+            color = ChagokTheme.colors.inkSecondary,
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
+/** 미니 패널: 기록 상태, 오늘 다녀온 곳, 음성 질문, 홈·종료 버튼. */
+@Composable
+private fun MiniPanel(
+    relation: RelationUi,
+    placeNames: List<String>,
+    onVoiceClick: () -> Unit,
+    onHomeClick: () -> Unit,
+    onEndRecordClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier.padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                LiveDot()
+                Text(
+                    text = stringResource(R.string.feature_drive_recording),
+                    style = ChagokTheme.typography.cardTitle.copy(fontSize = 19.sp, lineHeight = 26.sp),
+                    color = ChagokTheme.colors.ink,
+                )
+            }
+            ChagokChip(
+                text = stringResource(relation.modeLabelRes),
+                colors = ChagokChipDefaults.relation(relation.palette),
+                icon = relation.icon,
+                height = 36.dp,
+            )
+        }
+        TodayPlacesCard(placeNames = placeNames)
+        VoiceAskButton(
+            onClick = onVoiceClick,
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(),
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            ChagokButton(
+                text = stringResource(R.string.feature_drive_go_home),
+                onClick = onHomeClick,
+                modifier = Modifier.weight(1f),
+                style = ChagokButtonStyle.White,
+                icon = ChagokIcons.House,
+            )
+            ChagokButton(
+                text = stringResource(R.string.feature_home_recording_end),
+                onClick = onEndRecordClick,
+                modifier = Modifier.weight(1f),
+                style = ChagokButtonStyle.White,
+                icon = ChagokIcons.Stop,
+            )
+        }
+    }
+}
+
+/** 기록 중임을 알리는 초록 점. */
+@Composable
+private fun LiveDot() {
+    Box(
+        modifier = Modifier
+            .size(22.dp)
+            .background(ChagokTheme.colors.mint.copy(alpha = 0.3f), ChagokTheme.shapes.pill),
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(12.dp)
+                .background(ChagokTheme.colors.mint, ChagokTheme.shapes.pill),
+        )
+    }
+}
+
+/** "오늘 다녀온 곳 / 1곳 · 교동 뭉티기 외 1곳" */
+@Composable
+private fun TodayPlacesCard(placeNames: List<String>) {
+    val firstName = placeNames.firstOrNull()
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(ChagokTheme.colors.card, RoundedCornerShape(26.dp))
+            .padding(horizontal = 18.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = ChagokIcons.Pin,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp),
+                tint = ChagokTheme.colors.mintInk,
+            )
+            Text(
+                text = stringResource(R.string.feature_home_recording_today_label),
+                style = ChagokTheme.typography.label.copy(fontWeight = FontWeight.ExtraBold),
+                color = ChagokTheme.colors.inkSecondary,
+            )
+        }
+        Text(
+            text = when {
+                firstName == null -> stringResource(R.string.feature_drive_today_empty)
+                placeNames.size == 1 -> stringResource(R.string.feature_drive_today_one, firstName)
+                else -> stringResource(
+                    R.string.feature_drive_today_many,
+                    placeNames.size,
+                    firstName,
+                    placeNames.size - 1,
+                )
+            },
+            style = ChagokTheme.typography.cardTitle.copy(
+                fontSize = if (firstName == null) 19.sp else 22.sp,
+                lineHeight = 28.sp,
+            ),
+            color = ChagokTheme.colors.ink,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+/** 큰 [음성 질문하기]. 시안 크기는 바깥 152, 안쪽 116. */
+@Composable
+private fun VoiceAskButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val circle = ChagokTheme.shapes.pill
+
+    ChagokWidgetCard(modifier = modifier, onClick = onClick) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(152.dp)
+                    .background(ChagokTheme.colors.mintSoft, circle),
+                contentAlignment = Alignment.Center,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(116.dp)
+                        .chagokShadow(ChagokTheme.elevation.level2, circle)
+                        .background(ChagokTheme.colors.mint, circle),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = ChagokIcons.Mic,
+                        contentDescription = null,
+                        modifier = Modifier.size(52.dp),
+                        tint = ChagokTheme.colors.onMint,
+                    )
+                }
+            }
+            Text(
+                text = stringResource(R.string.feature_drive_voice_ask),
+                style = ChagokTheme.typography.cardTitle.copy(fontSize = 26.sp, lineHeight = 34.sp),
+                color = ChagokTheme.colors.ink,
+            )
+            Text(
+                text = stringResource(R.string.feature_drive_voice_ask_hint),
+                style = ChagokTheme.typography.caption.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold),
+                color = ChagokTheme.colors.inkSecondary,
+            )
+        }
+    }
+}
+
+private const val START_TOAST_MILLIS = 4_000L
+private const val COMING_SOON_TOAST_MILLIS = 2_000L
+
+// 이 너비보다 좁으면 작은 창으로 보고 미니 패널만 보인다.
+private val PANEL_ONLY_MAX_WIDTH = 600.dp
+
+// 시안의 작은 창 너비는 420. 큰 창(841) 안에서는 내비 자리를 남기려고 조금 줄인다.
+private val PANEL_WIDTH = 380.dp
+
+@Preview(name = "11 주행 중 · 큰 창", widthDp = 841, heightDp = 605)
+@Composable
+private fun DriveBigWindowPreview() = ChagokTheme {
+    DriveContent(
+        uiState = DriveUiState(loaded = true, relation = RelationUi.COUPLE, placeNames = listOf("교동 뭉티기")),
+        justStarted = false,
+        autoStarted = false,
+        onHomeClick = {},
+        onEndRecordClick = {},
+    )
+}
+
+@Preview(name = "08 기록 시작 안내 · 큰 창", widthDp = 841, heightDp = 605)
+@Composable
+private fun DriveStartToastPreview() = ChagokTheme {
+    DriveContent(
+        uiState = DriveUiState(loaded = true, relation = RelationUi.COUPLE),
+        justStarted = true,
+        autoStarted = false,
+        onHomeClick = {},
+        onEndRecordClick = {},
+    )
+}
+
+@Preview(name = "11 주행 중 · 작은 창", widthDp = 420, heightDp = 606)
+@Composable
+private fun DriveSmallWindowPreview() = ChagokTheme {
+    DriveContent(
+        uiState = DriveUiState(
+            loaded = true,
+            relation = RelationUi.FAMILY,
+            placeNames = listOf("교동 뭉티기", "앞산 카페"),
+        ),
+        justStarted = false,
+        autoStarted = false,
+        onHomeClick = {},
+        onEndRecordClick = {},
+    )
+}

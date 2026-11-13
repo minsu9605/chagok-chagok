@@ -1,6 +1,8 @@
 package com.chagokchagok.core.pleos.di
 
+import com.chagokchagok.core.domain.navi.NaviController
 import com.chagokchagok.core.domain.vehicle.SeatMonitor
+import com.chagokchagok.core.pleos.navi.PleosNaviController
 import com.chagokchagok.core.pleos.vehicle.PleosSeatMonitor
 import dagger.Binds
 import dagger.Module
@@ -13,4 +15,7 @@ import dagger.hilt.components.SingletonComponent
 internal abstract class PleosModule {
     @Binds
     abstract fun bindSeatMonitor(monitor: PleosSeatMonitor): SeatMonitor
+
+    @Binds
+    abstract fun bindNaviController(controller: PleosNaviController): NaviController
 }

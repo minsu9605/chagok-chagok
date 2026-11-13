@@ -11,12 +11,13 @@ import com.chagokchagok.feature.common.RelationUi
 import com.chagokchagok.feature.common.toDomain
 import com.chagokchagok.feature.common.toUi
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -36,11 +37,14 @@ class HomeViewModel @Inject constructor(
     /** 저장소에 없는, 이 화면만의 상태 (팝업과 토스트). */
     private data class LocalState(
         val relationPicker: RelationPickerUi? = null,
-        val startToast: StartToastUi? = null,
     )
 
     private val localState = MutableStateFlow(LocalState())
-    private var startToastJob: Job? = null
+
+    private val _recordStarted = Channel<Boolean>(Channel.BUFFERED)
+
+    /** 기록을 시작했을 때 한 번 낸다. 값은 좌석 1명이라 묻지 않고 시작했는지 여부. */
+    val recordStarted: Flow<Boolean> = _recordStarted.receiveAsFlow()
 
     val uiState: StateFlow<HomeUiState> = combine(
         seatMonitor.occupantCount,
@@ -59,7 +63,6 @@ class HomeViewModel @Inject constructor(
             ),
             recording = progress?.toUi(),
             relationPicker = local.relationPicker,
-            startToast = local.startToast,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -99,29 +102,16 @@ class HomeViewModel @Inject constructor(
         localState.update { it.copy(relationPicker = null) }
     }
 
-    /** 시작 안내 토스트를 눌러 닫을 때. */
-    fun onStartToastClick() {
-        startToastJob?.cancel()
-        localState.update { it.copy(startToast = null) }
-    }
-
     private fun showRelationPicker(mode: RelationPickerMode, seatCount: Int) {
         localState.update { it.copy(relationPicker = RelationPickerUi(mode = mode, seatCount = seatCount)) }
     }
 
     private fun startRecord(relation: RelationUi, autoStarted: Boolean) {
         val seatCount = uiState.value.seatCount
-        localState.update {
-            it.copy(
-                relationPicker = null,
-                startToast = StartToastUi(relation = relation, autoStarted = autoStarted),
-            )
-        }
-        startToastJob?.cancel()
-        startToastJob = viewModelScope.launch {
+        localState.update { it.copy(relationPicker = null) }
+        viewModelScope.launch {
             recordEngine.start(relation = relation.toDomain(), occupantCount = seatCount)
-            delay(START_TOAST_MILLIS)
-            localState.update { it.copy(startToast = null) }
+            _recordStarted.send(autoStarted)
         }
     }
 
@@ -143,7 +133,6 @@ class HomeViewModel @Inject constructor(
 
     private companion object {
         const val STOP_TIMEOUT_MILLIS = 5_000L
-        const val START_TOAST_MILLIS = 4_000L
         val TODAY_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("M월 d일 EEEE", Locale.KOREAN)
         val MONTH_DAY_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("M월 d일", Locale.KOREAN)
         val TIME_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm", Locale.KOREAN)
