@@ -5,6 +5,7 @@ package com.chagokchagok.core.domain.model
  *
  * @property savedVisits 평가까지 마친 방문 (다녀온 순서)
  * @property pendingVisit 도착했지만 아직 평가하지 않은 방문. 한 번에 하나만 있다. 없으면 null
+ *   그 방문의 `returnedAt`이 있으면 시동을 다시 켠 뒤라서 평가를 물을 차례다.
  */
 data class RecordProgress(
     val session: DriveSession,

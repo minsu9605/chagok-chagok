@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -87,6 +88,8 @@ fun DriveScreen(
         autoStarted = autoStarted,
         onHomeClick = onHomeClick,
         onEndRecordClick = onEndRecordClick,
+        onDevArriveClick = viewModel::onDevArriveClick,
+        onDevRestartClick = viewModel::onDevRestartClick,
         modifier = modifier,
     )
 }
@@ -99,6 +102,8 @@ private fun DriveContent(
     onHomeClick: () -> Unit,
     onEndRecordClick: () -> Unit,
     modifier: Modifier = Modifier,
+    onDevArriveClick: () -> Unit = {},
+    onDevRestartClick: () -> Unit = {},
 ) {
     val relation = uiState.relation ?: return
 
@@ -131,6 +136,9 @@ private fun DriveContent(
         Row(modifier = Modifier.fillMaxSize()) {
             if (!panelOnly) {
                 NaviPlaceholder(
+                    nextDevPlaceName = uiState.nextDevPlaceName,
+                    onDevArriveClick = onDevArriveClick,
+                    onDevRestartClick = onDevRestartClick,
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight()
@@ -140,6 +148,7 @@ private fun DriveContent(
             MiniPanel(
                 relation = relation,
                 placeNames = uiState.placeNames,
+                pendingPlaceName = uiState.pendingPlaceName,
                 onVoiceClick = { comingSoonClickCount++ },
                 onHomeClick = onHomeClick,
                 onEndRecordClick = onEndRecordClick,
@@ -170,9 +179,17 @@ private fun DriveContent(
     }
 }
 
-/** 순정 내비가 뜰 자리. 이 앱은 지도를 그리지 않는다. */
+/**
+ * 순정 내비가 뜰 자리. 이 앱은 지도를 그리지 않는다.
+ * [개발자용] 내비 도착과 시동 다시 켬을 흉내 내는 버튼을 아래에 둔다. 실제 내비 연결을 확인하면 삭제한다.
+ */
 @Composable
-private fun NaviPlaceholder(modifier: Modifier = Modifier) {
+private fun NaviPlaceholder(
+    nextDevPlaceName: String,
+    onDevArriveClick: () -> Unit,
+    onDevRestartClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Column(
         modifier = modifier.background(ChagokTheme.colors.fill, RoundedCornerShape(20.dp)),
         verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically),
@@ -195,6 +212,28 @@ private fun NaviPlaceholder(modifier: Modifier = Modifier) {
             color = ChagokTheme.colors.inkSecondary,
             textAlign = TextAlign.Center,
         )
+        Spacer(modifier = Modifier.height(18.dp))
+        Text(
+            text = stringResource(R.string.feature_drive_dev_title),
+            style = ChagokTheme.typography.label.copy(fontWeight = FontWeight.Bold),
+            color = ChagokTheme.colors.inkSecondary,
+        )
+        ChagokButton(
+            text = stringResource(R.string.feature_drive_dev_arrive, nextDevPlaceName),
+            onClick = onDevArriveClick,
+            modifier = Modifier.width(260.dp),
+            style = ChagokButtonStyle.White,
+            height = 52.dp,
+            icon = ChagokIcons.Pin,
+        )
+        ChagokButton(
+            text = stringResource(R.string.feature_drive_dev_restart),
+            onClick = onDevRestartClick,
+            modifier = Modifier.width(260.dp),
+            style = ChagokButtonStyle.White,
+            height = 52.dp,
+            icon = ChagokIcons.Clock,
+        )
     }
 }
 
@@ -203,6 +242,7 @@ private fun NaviPlaceholder(modifier: Modifier = Modifier) {
 private fun MiniPanel(
     relation: RelationUi,
     placeNames: List<String>,
+    pendingPlaceName: String?,
     onVoiceClick: () -> Unit,
     onHomeClick: () -> Unit,
     onEndRecordClick: () -> Unit,
@@ -237,7 +277,7 @@ private fun MiniPanel(
                 height = 36.dp,
             )
         }
-        TodayPlacesCard(placeNames = placeNames)
+        TodayPlacesCard(placeNames = placeNames, pendingPlaceName = pendingPlaceName)
         VoiceAskButton(
             onClick = onVoiceClick,
             modifier = Modifier
@@ -282,7 +322,7 @@ private fun LiveDot() {
 
 /** "오늘 다녀온 곳 / 1곳 · 교동 뭉티기 외 1곳" */
 @Composable
-private fun TodayPlacesCard(placeNames: List<String>) {
+private fun TodayPlacesCard(placeNames: List<String>, pendingPlaceName: String?) {
     val firstName = placeNames.firstOrNull()
 
     Column(
@@ -327,6 +367,13 @@ private fun TodayPlacesCard(placeNames: List<String>) {
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
+        if (pendingPlaceName != null) {
+            Text(
+                text = stringResource(R.string.feature_drive_pending, pendingPlaceName),
+                style = ChagokTheme.typography.label.copy(fontWeight = FontWeight.Bold),
+                color = ChagokTheme.colors.mintInk,
+            )
+        }
     }
 }
 

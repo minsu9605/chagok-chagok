@@ -30,6 +30,12 @@ interface RecordEngine {
      */
     suspend fun arrive(placeName: String, address: String?): Visit?
 
+    /**
+     * 도착한 곳에서 시동을 다시 켰다. 평가 전 방문에 복귀 시각을 적는다.
+     * 평가 전 방문이 없거나 이미 적었으면 아무것도 하지 않는다.
+     */
+    suspend fun markReturned()
+
     /** 평가 전 방문을 좋았어요·별로예요로 저장한다. 없는 방문이면 아무것도 하지 않는다. */
     suspend fun rate(visitId: String, rating: Rating)
 

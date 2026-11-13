@@ -69,6 +69,7 @@ class InMemoryRecordStore @Inject constructor() : RecordEngine, DiaryRepository 
             placeId = place.id,
             seq = current.savedVisits.size + 1,
             arrivedAt = Instant.now(),
+            returnedAt = null,
             status = VisitStatus.PENDING,
             rating = null,
             memoText = null,
@@ -76,6 +77,14 @@ class InMemoryRecordStore @Inject constructor() : RecordEngine, DiaryRepository 
         // 평가하지 않은 이전 방문은 새 방문으로 덮여 사라진다.
         active.value = current.copy(pendingVisit = VisitWithPlace(visit = visit, place = place))
         return visit
+    }
+
+    override suspend fun markReturned() {
+        active.update { current ->
+            val pending = current?.pendingVisit ?: return@update current
+            if (pending.visit.returnedAt != null) return@update current
+            current.copy(pendingVisit = pending.copy(visit = pending.visit.copy(returnedAt = Instant.now())))
+        }
     }
 
     override suspend fun rate(visitId: String, rating: Rating) {

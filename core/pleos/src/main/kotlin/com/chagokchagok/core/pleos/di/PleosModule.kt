@@ -1,9 +1,11 @@
 package com.chagokchagok.core.pleos.di
 
 import com.chagokchagok.core.domain.navi.NaviController
+import com.chagokchagok.core.domain.vehicle.IgnitionMonitor
 import com.chagokchagok.core.domain.vehicle.SeatMonitor
 import com.chagokchagok.core.pleos.navi.PleosNaviController
 import com.chagokchagok.core.pleos.vehicle.PleosSeatMonitor
+import com.chagokchagok.core.pleos.vehicle.ScreenOnIgnitionMonitor
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -18,4 +20,7 @@ internal abstract class PleosModule {
 
     @Binds
     abstract fun bindNaviController(controller: PleosNaviController): NaviController
+
+    @Binds
+    abstract fun bindIgnitionMonitor(monitor: ScreenOnIgnitionMonitor): IgnitionMonitor
 }

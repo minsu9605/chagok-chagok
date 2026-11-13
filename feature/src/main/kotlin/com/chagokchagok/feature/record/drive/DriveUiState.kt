@@ -8,9 +8,13 @@ import com.chagokchagok.feature.common.RelationUi
  * @property loaded 기록 상태를 한 번이라도 읽었으면 true
  * @property relation 진행 중인 기록의 관계. 기록 중이 아니면 null
  * @property placeNames 오늘 다녀온 곳 이름 (다녀온 순서)
+ * @property pendingPlaceName 도착했지만 아직 평가하지 않은 곳. 없으면 null
+ * @property nextDevPlaceName [개발자용] [도착]을 누르면 도착할 곳의 이름
  */
 data class DriveUiState(
     val loaded: Boolean = false,
     val relation: RelationUi? = null,
     val placeNames: List<String> = emptyList(),
+    val pendingPlaceName: String? = null,
+    val nextDevPlaceName: String = "",
 )
